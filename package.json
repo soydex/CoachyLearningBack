@@ -1,0 +1,20 @@
+{
+  "name": "coachy-learning-backend",
+  "version": "1.0.0",
+  "description": "Backend for Coach y Média V2 - Bun + TypeScript + MongoDB",
+  "main": "index.ts",
+  "scripts": {
+    "dev": "bun run index.ts",
+    "build": "bun build index.ts",
+    "start": "bun run build/index.js"
+  },
+  "dependencies": {
+    "mongoose": "^9.0.0",
+    "zod": "^4.1.13",
+    "dotenv": "^17.2.3"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "typescript": "^5.9.3"
+  }
+}
