@@ -127,10 +127,15 @@ router.get('/stats/overview', async (req, res) => {
 });
 
 // DELETE /api/users/:id/courses/:courseId - Remove course acquisition
-router.delete('/:id/courses/:courseId', async (req, res) => {
+router.delete('/:id/courses/:courseId', authenticateToken, async (req: AuthRequest, res) => {
   try {
     const userId = req.params.id;
     const courseId = req.params.courseId;
+
+    // Ensure user is modifying their own data or is admin
+    if (req.user?.userId !== userId && req.user?.role !== 'ADMIN') {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
 
     const user = await User.findById(userId);
     if (!user) {

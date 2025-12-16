@@ -73,6 +73,50 @@ async function seedDatabase() {
         coachProfile: { specialization: "Communication", experience: 3 },
         stats: { sessionsCompleted: 12 },
       },
+      // Active Students
+      {
+        organizationId: org1._id as any,
+        email: "student1@coachy-media.com",
+        name: "Thomas Anderson",
+        role: "USER",
+        password: hashedPassword,
+        stats: { sessionsCompleted: 2 },
+        coursesProgress: [
+          {
+            courseId: "c1",
+            completedLessonIds: ["l1", "l2", "c1", "c2"],
+            progress: 45,
+            score: 85,
+            lastAccess: new Date(),
+          },
+        ],
+      },
+      {
+        organizationId: org1._id as any,
+        email: "student2@coachy-media.com",
+        name: "Sarah Connor",
+        role: "USER",
+        password: hashedPassword,
+        stats: { sessionsCompleted: 5 },
+        coursesProgress: [
+          {
+            courseId: "c1",
+            completedLessonIds: ["l1", "l2", "c1", "c2", "c3", "q1"],
+            progress: 100,
+            score: 95,
+            lastAccess: new Date(),
+          },
+        ],
+      },
+      {
+        organizationId: org2._id as any,
+        email: "student3@formation-plus.com",
+        name: "Lucas Scott",
+        role: "USER",
+        password: hashedPassword,
+        stats: { sessionsCompleted: 0 },
+        coursesProgress: [],
+      },
     ] as any);
 
     console.log("👥 Users created");
@@ -107,155 +151,167 @@ async function seedDatabase() {
     ]);
     console.log("🔔 Notifications created");
 
-    // Create Course
-    await Course.create({
-      id: "c1",
-      category: "Privé",
-      title: "Gestion du temps et des priorités",
-      progress: 0,
-      modules: [
-        {
-          id: "m1",
-          title: "Introduction & Bases",
-          lessons: [
-            {
-              id: "l1",
-              title: "Définir les objectifs",
-              type: "LESSON",
-              duration: "5 min",
-            },
-            {
-              id: "l2",
-              title: "Planifier prioriser",
-              type: "LESSON",
-              duration: "5 min",
-            },
-          ],
-        },
-        {
-          id: "m2",
-          title: "Organisation Quotidienne",
-          lessons: [
-            {
-              id: "c1",
-              title: "Introduction : planifier prioriser",
-              type: "CHAPTER",
-              duration: "2 min",
-            },
-            {
-              id: "c2",
-              title: "La to-do list",
-              type: "CHAPTER",
-              duration: "10 min",
-            },
-            {
-              id: "c3",
-              title: "Planifiez et priorisez vos tâches !",
-              type: "CHAPTER",
-              duration: "8 min",
-            },
-            {
-              id: "q1",
-              title: "Quiz Planifier prioriser",
-              type: "QUIZ",
-              duration: "5 min",
-              questions: [
-                {
-                  id: "qq1",
-                  question:
-                    "Quelle est la première étape pour une planification efficace ?",
-                  options: [
-                    "Commencer par les tâches les plus faciles",
-                    "Lister toutes les tâches à accomplir",
-                    "Faire une pause café",
-                    "Déléguer tout immédiatement",
-                  ],
-                  correctAnswerIndex: 1,
-                },
-                {
-                  id: "qq2",
-                  question:
-                    "Selon la matrice d'Eisenhower, une tâche 'Importante mais non Urgente' doit être :",
-                  options: [
-                    "Fait immédiatement",
-                    "Planifiée pour plus tard",
-                    "Déléguée",
-                    "Supprimée",
-                  ],
-                  correctAnswerIndex: 1,
-                },
-                {
-                  id: "qq3",
-                  question: "Quel est l'avantage principal d'une To-Do List ?",
-                  options: [
-                    "Décharger le cerveau et visualiser la charge de travail",
-                    "Avoir l'air occupé au bureau",
-                    "Utiliser beaucoup de papier",
-                    "Aucun avantage réel",
-                  ],
-                  correctAnswerIndex: 0,
-                },
-              ],
-            },
-          ],
-        },
-        {
-          id: "m3",
-          title: "Efficacité Relationnelle",
-          lessons: [
-            {
-              id: "l3",
-              title: "Déléguer",
-              type: "LESSON",
-              duration: "6 min",
-            },
-            {
-              id: "l4",
-              title: "Savoir dire non",
-              type: "LESSON",
-              duration: "6 min",
-            },
-          ],
-        },
-        {
-          id: "m4",
-          title: "Gérer ses ressources",
-          isOpen: true,
-          lessons: [
-            {
-              id: "l5",
-              title: "Combattre la procrastination",
-              type: "LESSON",
-              duration: "6 min",
-            },
-            {
-              id: "l6",
-              title: "Gérer ses niveaux d'énergie",
-              type: "LESSON",
-              duration: "5 min",
-              steps: [
-                {
-                  id: "s1",
-                  title: "Introduction : gérer ses niveaux d’énergie",
-                  isCompleted: false,
-                },
-                {
-                  id: "s2",
-                  title: "Les 4 types d'énergie",
-                  isCompleted: false,
-                },
-                {
-                  id: "s3",
-                  title: "L'efficience par le rythme biologique",
-                  isCompleted: false,
-                },
-                {
-                  id: "s4",
-                  title: "Outil : alléger le cerveau",
-                  isCompleted: false,
-                },
-              ],
-              content: `<div class="space-y-8">
+    // Create Courses
+    await Course.create([
+      {
+        id: "c1",
+        category: "Privé",
+        title: "Gestion du temps et des priorités",
+        progress: 0,
+        modules: [
+          {
+            id: "m1",
+            title: "Introduction & Bases",
+            lessons: [
+              {
+                id: "l1",
+                title: "Définir les objectifs",
+                type: "LESSON",
+                duration: "5 min",
+                content: `
+                  <div class="prose dark:prose-invert max-w-none">
+                    <h3>Pourquoi définir des objectifs ?</h3>
+                    <p>Définir des objectifs clairs est la première étape vers une gestion du temps efficace. Sans direction précise, il est facile de se perdre dans les tâches quotidiennes sans réellement progresser.</p>
+                    <ul>
+                      <li>Clarté mentale</li>
+                      <li>Motivation accrue</li>
+                      <li>Mesure du progrès</li>
+                    </ul>
+                  </div>
+                `
+              },
+              {
+                id: "l2",
+                title: "Planifier prioriser",
+                type: "LESSON",
+                duration: "5 min",
+              },
+            ],
+          },
+          {
+            id: "m2",
+            title: "Organisation Quotidienne",
+            lessons: [
+              {
+                id: "c1",
+                title: "Introduction : planifier prioriser",
+                type: "CHAPTER",
+                duration: "2 min",
+              },
+              {
+                id: "c2",
+                title: "La to-do list",
+                type: "CHAPTER",
+                duration: "10 min",
+              },
+              {
+                id: "c3",
+                title: "Planifiez et priorisez vos tâches !",
+                type: "CHAPTER",
+                duration: "8 min",
+              },
+              {
+                id: "q1",
+                title: "Quiz Planifier prioriser",
+                type: "QUIZ",
+                duration: "5 min",
+                questions: [
+                  {
+                    id: "qq1",
+                    question:
+                      "Quelle est la première étape pour une planification efficace ?",
+                    options: [
+                      "Commencer par les tâches les plus faciles",
+                      "Lister toutes les tâches à accomplir",
+                      "Faire une pause café",
+                      "Déléguer tout immédiatement",
+                    ],
+                    correctAnswerIndex: 1,
+                  },
+                  {
+                    id: "qq2",
+                    question:
+                      "Selon la matrice d'Eisenhower, une tâche 'Importante mais non Urgente' doit être :",
+                    options: [
+                      "Fait immédiatement",
+                      "Planifiée pour plus tard",
+                      "Déléguée",
+                      "Supprimée",
+                    ],
+                    correctAnswerIndex: 1,
+                  },
+                  {
+                    id: "qq3",
+                    question: "Quel est l'avantage principal d'une To-Do List ?",
+                    options: [
+                      "Décharger le cerveau et visualiser la charge de travail",
+                      "Avoir l'air occupé au bureau",
+                      "Utiliser beaucoup de papier",
+                      "Aucun avantage réel",
+                    ],
+                    correctAnswerIndex: 0,
+                  },
+                ],
+              },
+            ],
+          },
+          {
+            id: "m3",
+            title: "Efficacité Relationnelle",
+            lessons: [
+              {
+                id: "l3",
+                title: "Déléguer",
+                type: "LESSON",
+                duration: "6 min",
+              },
+              {
+                id: "l4",
+                title: "Savoir dire non",
+                type: "LESSON",
+                duration: "6 min",
+              },
+            ],
+          },
+          {
+            id: "m4",
+            title: "Gérer ses ressources",
+            isOpen: true,
+            lessons: [
+              {
+                id: "l5",
+                title: "Combattre la procrastination",
+                type: "LESSON",
+                duration: "6 min",
+              },
+              {
+                id: "l6",
+                title: "Gérer ses niveaux d'énergie",
+                type: "LESSON",
+                duration: "5 min",
+                steps: [
+                  {
+                    id: "s1",
+                    title: "Introduction : gérer ses niveaux d’énergie",
+                    isCompleted: false,
+                  },
+                  {
+                    id: "s2",
+                    title: "Les 4 types d'énergie",
+                    isCompleted: false,
+                  },
+                  {
+                    id: "s3",
+                    title: "L'efficience par le rythme biologique",
+                    isCompleted: false,
+                  },
+                  {
+                    id: "s4",
+                    title: "Outil : alléger le cerveau",
+                    isCompleted: false,
+                  },
+                ],
+                content: `<div class="space-y-8">
   <div class="border-l-4 border-brand-600 pl-6 py-2 bg-blue-50 rounded-r-lg">
     <h3 class="text-xl font-serif italic text-slate-700">
       « Mettre tout en équilibre, c’est bien. Mettre tout en harmonie, c’est mieux »
@@ -286,12 +342,47 @@ async function seedDatabase() {
     <p class="font-medium text-lg text-center">Mais gérer son énergie est encore autre chose, puisque sans elle, vous ne pourrez pas mettre en place tout ce qui est nécessaire, important, capital sur la durée !</p>
   </div>
 </div>`,
-            },
-          ],
-        },
-      ],
-    });
-    console.log("📚 Course created");
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: "c2",
+        category: "Leadership",
+        title: "Communication & Leadership",
+        progress: 0,
+        modules: [
+          {
+            id: "m2-1",
+            title: "Les fondements du leadership",
+            lessons: [
+              {
+                id: "l2-1",
+                title: "Styles de leadership",
+                type: "LESSON",
+                duration: "10 min",
+              },
+              {
+                id: "q2-1",
+                title: "Quiz Leadership",
+                type: "QUIZ",
+                duration: "5 min",
+                questions: [
+                  {
+                    id: "qq2-1",
+                    question: "Quel style de leadership favorise l'autonomie ?",
+                    options: ["Directif", "Délégatif", "Persuasif", "Participatif"],
+                    correctAnswerIndex: 1
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]);
+    console.log("📚 Courses created");
 
     // Create capsules
     const capsules = await Capsule.create([
@@ -377,6 +468,7 @@ async function seedDatabase() {
     console.log("\n📊 Summary:");
     console.log(`   Organizations: ${await Organization.countDocuments()}`);
     console.log(`   Users: ${await User.countDocuments()}`);
+    console.log(`   Courses: ${await Course.countDocuments()}`);
     console.log(`   Capsules: ${await Capsule.countDocuments()}`);
     console.log(`   Sessions: ${await Session.countDocuments()}`);
 
