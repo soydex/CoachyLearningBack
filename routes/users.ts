@@ -1,5 +1,6 @@
 import express from 'express';
 import User, { UserZod } from '../models/User';
+import { authenticateToken, AuthRequest } from '../middleware/auth';
 
 const router = express.Router();
 
@@ -124,5 +125,89 @@ router.get('/stats/overview', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch user statistics' });
   }
 });
+
+// DELETE /api/users/:id/courses/:courseId - Remove course acquisition
+router.delete('/:id/courses/:courseId', async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const courseId = req.params.courseId;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Remove the course progress entry
+    user.coursesProgress = user.coursesProgress.filter(cp => cp.courseId !== courseId);
+    await user.save();
+
+    res.json({ 
+      message: 'Course acquisition removed',
+      coursesProgress: user.coursesProgress 
+    });
+  } catch (error) {
+    console.error('Remove course acquisition error:', error);
+    res.status(500).json({ error: 'Failed to remove course acquisition' });
+  }
+});
+// POST /api/users/:userId/courses/:courseId/lessons/:lessonId/toggle - Toggle lesson completion
+router.post('/:userId/courses/:courseId/lessons/:lessonId/toggle', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const { userId, courseId, lessonId } = req.params;
+
+    // Ensure user is modifying their own data or is admin
+    if (req.user?.userId !== userId && req.user?.role !== 'ADMIN') {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Find or create course progress
+    let courseProgress = user.coursesProgress.find(cp => cp.courseId === courseId);
+    if (!courseProgress) {
+      courseProgress = {
+        courseId,
+        completedLessonIds: [],
+        progress: 0,
+        score: 0,
+        lastAccess: new Date()
+      };
+      user.coursesProgress.push(courseProgress);
+    }
+
+    // Toggle lesson completion
+    const lessonIndex = courseProgress.completedLessonIds.indexOf(lessonId);
+    let isCompleted = false;
+    
+    if (lessonIndex > -1) {
+      // Remove lesson (uncomplete)
+      courseProgress.completedLessonIds.splice(lessonIndex, 1);
+      isCompleted = false;
+    } else {
+      // Add lesson (complete)
+      courseProgress.completedLessonIds.push(lessonId);
+      isCompleted = true;
+    }
+
+    // Update last access
+    courseProgress.lastAccess = new Date();
+
+    await user.save();
+
+    res.json({ 
+      message: 'Lesson completion toggled', 
+      isCompleted, 
+      completedLessonIds: courseProgress.completedLessonIds 
+    });
+
+  } catch (error) {
+    console.error('Error toggling lesson completion:', error);
+    res.status(500).json({ error: 'Failed to toggle lesson completion' });
+  }
+});
+
 
 export default router;

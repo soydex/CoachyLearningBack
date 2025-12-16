@@ -1,22 +1,26 @@
-import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
+import { Request, Response, NextFunction } from "express";
+import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
 export interface AuthRequest extends Request {
   user?: {
-    id: string;
+    userId: string;
     role: string;
     organizationId: string;
   };
 }
 
-export const authenticateToken = (req: AuthRequest, res: Response, next: NextFunction) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
+export const authenticateToken = (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
 
   if (!token) {
-    return res.status(401).json({ error: 'Access denied. No token provided.' });
+    return res.status(401).json({ error: "Access denied. No token provided." });
   }
 
   try {
@@ -24,18 +28,20 @@ export const authenticateToken = (req: AuthRequest, res: Response, next: NextFun
     req.user = decoded;
     next();
   } catch (error) {
-    res.status(403).json({ error: 'Invalid token.' });
+    res.status(403).json({ error: "Invalid token." });
   }
 };
 
 export const requireRole = (roles: string[]) => {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
     if (!req.user) {
-      return res.status(401).json({ error: 'Unauthorized.' });
+      return res.status(401).json({ error: "Unauthorized." });
     }
 
     if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ error: 'Access denied. Insufficient permissions.' });
+      return res
+        .status(403)
+        .json({ error: "Access denied. Insufficient permissions." });
     }
 
     next();

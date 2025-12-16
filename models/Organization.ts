@@ -1,18 +1,21 @@
-import { Schema, model, Document } from 'mongoose';
-import { z } from 'zod';
+import { Schema, model, Document } from "mongoose";
+import { z } from "zod";
 
 // Organization Schema
-const OrganizationSchema = new Schema({
-  name: { type: String, required: true },
-  settings: { type: Schema.Types.Mixed, default: {} },
-}, {
-  timestamps: true,
-});
+const OrganizationSchema = new Schema(
+  {
+    name: { type: String, required: true },
+    settings: { type: Schema.Types.Mixed, default: {} },
+  },
+  {
+    timestamps: true,
+  }
+);
 
 // Zod validation for Organization
 const OrganizationZod = z.object({
   name: z.string().min(1),
-  settings: z.record(z.any()).default({}),
+  settings: z.record(z.string(), z.any()).default({}),
 });
 
 // TypeScript interface
@@ -27,4 +30,4 @@ export interface IOrganization extends Document {
 export { OrganizationZod };
 
 // Export Mongoose model
-export default model<IOrganization>('Organization', OrganizationSchema);
+export default model<IOrganization>("Organization", OrganizationSchema);

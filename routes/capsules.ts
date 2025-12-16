@@ -1,4 +1,5 @@
 import express from 'express';
+import { Types } from 'mongoose';
 import Capsule, { CapsuleZod, TransactionZod } from '../models/Capsule';
 
 const router = express.Router();
@@ -121,7 +122,13 @@ router.post('/:id/transactions', async (req, res) => {
       return res.status(400).json({ error: 'Insufficient hours remaining' });
     }
 
-    capsule.history.push(validatedTransaction);
+    // Convert userId string to ObjectId
+    const transaction = {
+      ...validatedTransaction,
+      userId: new Types.ObjectId(validatedTransaction.userId)
+    };
+
+    capsule.history.push(transaction as any);
     capsule.remainingHours = newRemainingHours;
 
     await capsule.save();

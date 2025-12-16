@@ -1,63 +1,155 @@
-import express from 'express';
+import express from "express";
 
 const router = express.Router();
 
 // API Routes data
 const apiRoutes = [
   {
-    resource: 'Users',
-    basePath: '/api/users',
+    resource: "Users",
+    basePath: "/api/users",
     routes: [
-      { method: 'GET', path: '/api/users', description: 'Get all users with pagination', params: 'page, limit, organizationId, role' },
-      { method: 'GET', path: '/api/users/:id', description: 'Get user by ID' },
-      { method: 'POST', path: '/api/users', description: 'Create new user' },
-      { method: 'PUT', path: '/api/users/:id', description: 'Update user' },
-      { method: 'DELETE', path: '/api/users/:id', description: 'Delete user' },
-      { method: 'GET', path: '/api/users/stats/overview', description: 'Get users statistics' }
-    ]
+      {
+        method: "GET",
+        path: "/api/users",
+        description: "Get all users with pagination",
+        params: "page, limit, organizationId, role",
+      },
+      { method: "GET", path: "/api/users/:id", description: "Get user by ID" },
+      { method: "POST", path: "/api/users", description: "Create new user" },
+      { method: "PUT", path: "/api/users/:id", description: "Update user" },
+      { method: "DELETE", path: "/api/users/:id", description: "Delete user" },
+      {
+        method: "GET",
+        path: "/api/users/stats/overview",
+        description: "Get users statistics",
+      },
+    ],
   },
   {
-    resource: 'Organizations',
-    basePath: '/api/organizations',
+    resource: "Organizations",
+    basePath: "/api/organizations",
     routes: [
-      { method: 'GET', path: '/api/organizations', description: 'Get all organizations with pagination', params: 'page, limit' },
-      { method: 'GET', path: '/api/organizations/:id', description: 'Get organization by ID' },
-      { method: 'POST', path: '/api/organizations', description: 'Create new organization' },
-      { method: 'PUT', path: '/api/organizations/:id', description: 'Update organization' },
-      { method: 'DELETE', path: '/api/organizations/:id', description: 'Delete organization' },
-      { method: 'GET', path: '/api/organizations/stats/overview', description: 'Get organizations statistics' }
-    ]
+      {
+        method: "GET",
+        path: "/api/organizations",
+        description: "Get all organizations with pagination",
+        params: "page, limit",
+      },
+      {
+        method: "GET",
+        path: "/api/organizations/:id",
+        description: "Get organization by ID",
+      },
+      {
+        method: "POST",
+        path: "/api/organizations",
+        description: "Create new organization",
+      },
+      {
+        method: "PUT",
+        path: "/api/organizations/:id",
+        description: "Update organization",
+      },
+      {
+        method: "DELETE",
+        path: "/api/organizations/:id",
+        description: "Delete organization",
+      },
+      {
+        method: "GET",
+        path: "/api/organizations/stats/overview",
+        description: "Get organizations statistics",
+      },
+    ],
   },
   {
-    resource: 'Capsules',
-    basePath: '/api/capsules',
+    resource: "Capsules",
+    basePath: "/api/capsules",
     routes: [
-      { method: 'GET', path: '/api/capsules', description: 'Get all capsules with pagination', params: 'page, limit, organizationId, status' },
-      { method: 'GET', path: '/api/capsules/:id', description: 'Get capsule by ID' },
-      { method: 'POST', path: '/api/capsules', description: 'Create new capsule' },
-      { method: 'PUT', path: '/api/capsules/:id', description: 'Update capsule' },
-      { method: 'DELETE', path: '/api/capsules/:id', description: 'Delete capsule' },
-      { method: 'POST', path: '/api/capsules/:id/transactions', description: 'Add transaction to capsule' },
-      { method: 'GET', path: '/api/capsules/stats/overview', description: 'Get capsules statistics' }
-    ]
+      {
+        method: "GET",
+        path: "/api/capsules",
+        description: "Get all capsules with pagination",
+        params: "page, limit, organizationId, status",
+      },
+      {
+        method: "GET",
+        path: "/api/capsules/:id",
+        description: "Get capsule by ID",
+      },
+      {
+        method: "POST",
+        path: "/api/capsules",
+        description: "Create new capsule",
+      },
+      {
+        method: "PUT",
+        path: "/api/capsules/:id",
+        description: "Update capsule",
+      },
+      {
+        method: "DELETE",
+        path: "/api/capsules/:id",
+        description: "Delete capsule",
+      },
+      {
+        method: "POST",
+        path: "/api/capsules/:id/transactions",
+        description: "Add transaction to capsule",
+      },
+      {
+        method: "GET",
+        path: "/api/capsules/stats/overview",
+        description: "Get capsules statistics",
+      },
+    ],
   },
   {
-    resource: 'Sessions',
-    basePath: '/api/sessions',
+    resource: "Sessions",
+    basePath: "/api/sessions",
     routes: [
-      { method: 'GET', path: '/api/sessions', description: 'Get all sessions with pagination', params: 'page, limit, capsuleId, coachId, status' },
-      { method: 'GET', path: '/api/sessions/:id', description: 'Get session by ID' },
-      { method: 'POST', path: '/api/sessions', description: 'Create new session' },
-      { method: 'PUT', path: '/api/sessions/:id', description: 'Update session' },
-      { method: 'DELETE', path: '/api/sessions/:id', description: 'Delete session' },
-      { method: 'POST', path: '/api/sessions/:id/assessments', description: 'Add assessment to session' },
-      { method: 'GET', path: '/api/sessions/stats/overview', description: 'Get sessions statistics' }
-    ]
-  }
+      {
+        method: "GET",
+        path: "/api/sessions",
+        description: "Get all sessions with pagination",
+        params: "page, limit, capsuleId, coachId, status",
+      },
+      {
+        method: "GET",
+        path: "/api/sessions/:id",
+        description: "Get session by ID",
+      },
+      {
+        method: "POST",
+        path: "/api/sessions",
+        description: "Create new session",
+      },
+      {
+        method: "PUT",
+        path: "/api/sessions/:id",
+        description: "Update session",
+      },
+      {
+        method: "DELETE",
+        path: "/api/sessions/:id",
+        description: "Delete session",
+      },
+      {
+        method: "POST",
+        path: "/api/sessions/:id/assessments",
+        description: "Add assessment to session",
+      },
+      {
+        method: "GET",
+        path: "/api/sessions/stats/overview",
+        description: "Get sessions statistics",
+      },
+    ],
+  },
 ];
 
 // GET /api-explorer - API Explorer interface
-router.get('/', (req, res) => {
+router.get("/", (req, res) => {
   const html = `
 <!DOCTYPE html>
 <html lang="fr">
@@ -86,15 +178,23 @@ router.get('/', (req, res) => {
         </div>
 
         <div class="grid gap-8">
-            ${apiRoutes.map(resource => `
+            ${apiRoutes
+              .map(
+                (resource) => `
                 <div class="bg-white rounded-lg shadow-md overflow-hidden">
                     <div class="bg-gray-800 text-white px-6 py-4">
-                        <h2 class="text-xl font-semibold">${resource.resource}</h2>
-                        <p class="text-gray-300 text-sm">Base path: <code>${resource.basePath}</code></p>
+                        <h2 class="text-xl font-semibold">${
+                          resource.resource
+                        }</h2>
+                        <p class="text-gray-300 text-sm">Base path: <code>${
+                          resource.basePath
+                        }</code></p>
                     </div>
                     <div class="p-6">
                         <div class="space-y-4">
-                            ${resource.routes.map(route => `
+                            ${resource.routes
+                              .map(
+                                (route) => `
                                 <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                                     <div class="flex items-start gap-4">
                                         <span class="method-${route.method.toLowerCase()} text-white px-3 py-1 rounded text-sm font-mono font-bold text-xs uppercase min-w-[60px] text-center">
@@ -102,25 +202,39 @@ router.get('/', (req, res) => {
                                         </span>
                                         <div class="flex-1">
                                             <div class="flex items-center gap-2 mb-2">
-                                                <code class="bg-gray-100 px-2 py-1 rounded text-sm font-mono">${route.path}</code>
-                                                <button onclick="copyToClipboard('${route.path}')" class="text-gray-400 hover:text-gray-600 text-sm">
+                                                <code class="bg-gray-100 px-2 py-1 rounded text-sm font-mono">${
+                                                  route.path
+                                                }</code>
+                                                <button onclick="copyToClipboard('${
+                                                  route.path
+                                                }')" class="text-gray-400 hover:text-gray-600 text-sm">
                                                     📋
                                                 </button>
                                             </div>
-                                            <p class="text-gray-700 mb-2">${route.description}</p>
-                                            ${route.params ? `
+                                            <p class="text-gray-700 mb-2">${
+                                              route.description
+                                            }</p>
+                                            ${
+                                              route.params
+                                                ? `
                                                 <div class="text-sm text-gray-600">
                                                     <strong>Query params:</strong> <code class="bg-gray-100 px-1 rounded">${route.params}</code>
                                                 </div>
-                                            ` : ''}
+                                            `
+                                                : ""
+                                            }
                                         </div>
                                     </div>
                                 </div>
-                            `).join('')}
+                            `
+                              )
+                              .join("")}
                         </div>
                     </div>
                 </div>
-            `).join('')}
+            `
+              )
+              .join("")}
         </div>
 
         <div class="mt-12 bg-white rounded-lg shadow-md p-6">

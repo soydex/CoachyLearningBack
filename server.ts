@@ -20,6 +20,7 @@ import capsuleRoutes from './routes/capsules';
 import sessionRoutes from './routes/sessions';
 import courseRoutes from './routes/courses';
 import notificationRoutes from './routes/notifications';
+import statisticsRoutes from './routes/statistics';
 import apiExplorerRoutes from './routes/api-explorer';
 import adminRoutes from './routes/admin';
 
@@ -58,6 +59,7 @@ app.use('/api/capsules', capsuleRoutes);
 app.use('/api/sessions', sessionRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/statistics', statisticsRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api-explorer', apiExplorerRoutes);
 

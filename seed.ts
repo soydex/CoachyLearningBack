@@ -1,7 +1,7 @@
 import "dotenv/config";
 import dbConnect from "./lib/db";
 import Organization from "./models/Organization";
-import User from "./models/User";
+import User, { IUser } from "./models/User";
 import Capsule from "./models/Capsule";
 import Session from "./models/Session";
 import Course from "./models/Course";
@@ -38,9 +38,9 @@ async function seedDatabase() {
     const hashedPassword = await bcrypt.hash("password123", 10);
 
     // Create users
-    const users = await User.create([
+    const users: IUser[] = await User.create([
       {
-        organizationId: org1._id,
+        organizationId: org1._id as any,
         email: "admin@coachy-media.com",
         name: "Admin Principal",
         role: "ADMIN",
@@ -48,7 +48,7 @@ async function seedDatabase() {
         stats: { sessionsCompleted: 0 },
       },
       {
-        organizationId: org1._id,
+        organizationId: org1._id as any,
         email: "coach1@coachy-media.com",
         name: "Marie Dupont",
         role: "COACH",
@@ -57,7 +57,7 @@ async function seedDatabase() {
         stats: { sessionsCompleted: 15 },
       },
       {
-        organizationId: org1._id,
+        organizationId: org1._id as any,
         email: "manager@coachy-media.com",
         name: "Jean Martin",
         role: "MANAGER",
@@ -65,7 +65,7 @@ async function seedDatabase() {
         stats: { sessionsCompleted: 8 },
       },
       {
-        organizationId: org2._id,
+        organizationId: org2._id as any,
         email: "coach2@formation-plus.com",
         name: "Sophie Bernard",
         role: "COACH",
@@ -73,7 +73,7 @@ async function seedDatabase() {
         coachProfile: { specialization: "Communication", experience: 3 },
         stats: { sessionsCompleted: 12 },
       },
-    ]);
+    ] as any);
 
     console.log("👥 Users created");
 
@@ -90,7 +90,8 @@ async function seedDatabase() {
       {
         id: "n2",
         title: "Rappel : Quiz à terminer",
-        message: 'N\'oubliez pas de compléter le quiz "Planifier prioriser" avant demain soir.',
+        message:
+          'N\'oubliez pas de compléter le quiz "Planifier prioriser" avant demain soir.',
         date: "Il y a 5 heures",
         isRead: false,
         type: "alert",
@@ -161,7 +162,8 @@ async function seedDatabase() {
               questions: [
                 {
                   id: "qq1",
-                  question: "Quelle est la première étape pour une planification efficace ?",
+                  question:
+                    "Quelle est la première étape pour une planification efficace ?",
                   options: [
                     "Commencer par les tâches les plus faciles",
                     "Lister toutes les tâches à accomplir",
@@ -172,7 +174,8 @@ async function seedDatabase() {
                 },
                 {
                   id: "qq2",
-                  question: "Selon la matrice d'Eisenhower, une tâche 'Importante mais non Urgente' doit être :",
+                  question:
+                    "Selon la matrice d'Eisenhower, une tâche 'Importante mais non Urgente' doit être :",
                   options: [
                     "Fait immédiatement",
                     "Planifiée pour plus tard",
@@ -231,10 +234,26 @@ async function seedDatabase() {
               type: "LESSON",
               duration: "5 min",
               steps: [
-                { id: "s1", title: "Introduction : gérer ses niveaux d’énergie", isCompleted: false },
-                { id: "s2", title: "Les 4 types d'énergie", isCompleted: false },
-                { id: "s3", title: "L'efficience par le rythme biologique", isCompleted: false },
-                { id: "s4", title: "Outil : alléger le cerveau", isCompleted: false },
+                {
+                  id: "s1",
+                  title: "Introduction : gérer ses niveaux d’énergie",
+                  isCompleted: false,
+                },
+                {
+                  id: "s2",
+                  title: "Les 4 types d'énergie",
+                  isCompleted: false,
+                },
+                {
+                  id: "s3",
+                  title: "L'efficience par le rythme biologique",
+                  isCompleted: false,
+                },
+                {
+                  id: "s4",
+                  title: "Outil : alléger le cerveau",
+                  isCompleted: false,
+                },
               ],
               content: `<div class="space-y-8">
   <div class="border-l-4 border-brand-600 pl-6 py-2 bg-blue-50 rounded-r-lg">
@@ -266,7 +285,7 @@ async function seedDatabase() {
   <div class="bg-blue-900 text-white p-6 rounded-xl shadow-lg">
     <p class="font-medium text-lg text-center">Mais gérer son énergie est encore autre chose, puisque sans elle, vous ne pourrez pas mettre en place tout ce qui est nécessaire, important, capital sur la durée !</p>
   </div>
-</div>`
+</div>`,
             },
           ],
         },
@@ -275,50 +294,54 @@ async function seedDatabase() {
     console.log("📚 Course created");
 
     // Create capsules
-    const capsule1 = await Capsule.create({
-      organizationId: org1._id,
-      name: "Capsule Leadership 2025",
-      totalHoursInitial: 40,
-      remainingHours: 32,
-      status: "ACTIVE",
-      expirationDate: new Date("2025-12-31"),
-      history: [
-        {
-          action: "DEBIT",
-          amount: 8,
-          date: new Date("2025-01-15"),
-          userId: users[0]._id,
-          reason: "Session de coaching individuel",
-        },
-      ],
-    });
+    const capsules = await Capsule.create([
+      {
+        organizationId: org1._id as any,
+        name: "Capsule Leadership 2025",
+        totalHoursInitial: 40,
+        remainingHours: 32,
+        status: "ACTIVE",
+        expirationDate: new Date("2025-12-31"),
+        history: [
+          {
+            action: "DEBIT",
+            amount: 8,
+            date: new Date("2025-01-15"),
+            userId: users[0]._id as any,
+            reason: "Session de coaching individuel",
+          },
+        ],
+      },
+      {
+        organizationId: org2._id as any,
+        name: "Programme Communication",
+        totalHoursInitial: 60,
+        remainingHours: 45,
+        status: "ACTIVE",
+        expirationDate: new Date("2025-11-30"),
+        history: [
+          {
+            action: "DEBIT",
+            amount: 15,
+            date: new Date("2025-02-01"),
+            userId: users[3]._id as any,
+            reason: "Atelier groupe",
+          },
+        ],
+      },
+    ] as any);
 
-    const capsule2 = await Capsule.create({
-      organizationId: org2._id,
-      name: "Programme Communication",
-      totalHoursInitial: 60,
-      remainingHours: 45,
-      status: "ACTIVE",
-      expirationDate: new Date("2025-11-30"),
-      history: [
-        {
-          action: "DEBIT",
-          amount: 15,
-          date: new Date("2025-02-01"),
-          userId: users[3]._id,
-          reason: "Atelier groupe",
-        },
-      ],
-    });
+    const capsule1 = capsules[0];
+    const capsule2 = capsules[1];
 
     console.log("📦 Capsules created");
 
     // Create sessions
     const sessions = await Session.create([
       {
-        capsuleId: capsule1._id,
-        coachId: users[1]._id,
-        attendees: [users[2]._id],
+        capsuleId: (capsule1._id as any),
+        coachId: (users[1]._id as any),
+        attendees: [(users[2]._id as any)],
         startTime: new Date("2025-01-20T10:00:00"),
         endTime: new Date("2025-01-20T11:30:00"),
         duration: 90,
@@ -326,8 +349,8 @@ async function seedDatabase() {
         videoUrl: "https://example.com/recording1",
         assessments: [
           {
-            raterId: users[1]._id,
-            targetId: users[2]._id,
+            raterId: (users[1]._id as any),
+            targetId: (users[2]._id as any),
             leadership: 8,
             communication: 7,
             adaptability: 9,
@@ -337,16 +360,16 @@ async function seedDatabase() {
         ],
       },
       {
-        capsuleId: capsule2._id,
-        coachId: users[3]._id,
-        attendees: [users[0]._id, users[1]._id],
+        capsuleId: (capsule2._id as any),
+        coachId: (users[3]._id as any),
+        attendees: [(users[0]._id as any), (users[1]._id as any)],
         startTime: new Date("2025-12-20T14:00:00"),
         endTime: new Date("2025-12-20T16:00:00"),
         duration: 120,
         status: "SCHEDULED",
         videoUrl: "",
       },
-    ]);
+    ] as any);
 
     console.log("📅 Sessions created");
 

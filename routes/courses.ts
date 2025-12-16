@@ -125,12 +125,13 @@ router.post('/:id/modules/:moduleId/lessons', authenticateToken, requireRole(['C
   }
 });
 
-// POST /api/courses/:id/lessons/:lessonId/complete - Mark a lesson as complete
+// POST /api/courses/:id/lessons/:lessonId/complete - Mark a lesson as complete or incomplete
 router.post('/:id/lessons/:lessonId/complete', authenticateToken, async (req: any, res) => {
   try {
     const courseId = req.params.id;
     const lessonId = req.params.lessonId;
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
+    const { completed = true } = req.body; // Default to true for backward compatibility
 
     if (!userId) {
       return res.status(401).json({ error: 'User ID not found in token' });
@@ -168,9 +169,14 @@ router.post('/:id/lessons/:lessonId/complete', authenticateToken, async (req: an
       user.coursesProgress.push(courseProgress);
     }
 
-    // Add lesson if not already completed
-    if (!courseProgress.completedLessonIds.includes(lessonId)) {
-      courseProgress.completedLessonIds.push(lessonId);
+    if (completed) {
+      // Add lesson if not already completed
+      if (!courseProgress.completedLessonIds.includes(lessonId)) {
+        courseProgress.completedLessonIds.push(lessonId);
+      }
+    } else {
+      // Remove lesson if present
+      courseProgress.completedLessonIds = courseProgress.completedLessonIds.filter(id => id !== lessonId);
     }
 
     // Recalculate progress
@@ -182,14 +188,14 @@ router.post('/:id/lessons/:lessonId/complete', authenticateToken, async (req: an
     await user.save();
 
     res.json({ 
-      message: 'Lesson completed', 
+      message: completed ? 'Lesson completed' : 'Lesson uncompleted', 
       progress: courseProgress.progress,
       completedLessonIds: courseProgress.completedLessonIds 
     });
 
   } catch (error) {
     console.error('Complete lesson error:', error);
-    res.status(500).json({ error: 'Failed to complete lesson' });
+    res.status(500).json({ error: 'Failed to update lesson status' });
   }
 });
 
