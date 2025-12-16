@@ -7,6 +7,15 @@ const UserStatsSchema = new Schema({
   lastAssessmentDate: { type: Date, default: null },
 }, { _id: false });
 
+// Embedded Schema: CourseProgress
+const CourseProgressSchema = new Schema({
+  courseId: { type: String, required: true },
+  completedLessonIds: [{ type: String }],
+  progress: { type: Number, default: 0 },
+  score: { type: Number, default: 0 },
+  lastAccess: { type: Date, default: Date.now }
+}, { _id: false });
+
 // Zod validation for UserStats
 const UserStatsZod = z.object({
   sessionsCompleted: z.number().min(0).default(0),
@@ -26,6 +35,8 @@ const UserSchema = new Schema({
   coachProfile: { type: Schema.Types.Mixed, default: {} },
   // Stats (embedded)
   stats: { type: UserStatsSchema, default: {} },
+  // Course Progress
+  coursesProgress: { type: [CourseProgressSchema], default: [] },
 }, {
   timestamps: true,
 });
@@ -48,6 +59,14 @@ export interface IUserStats {
   lastAssessmentDate?: Date;
 }
 
+export interface ICourseProgress {
+  courseId: string;
+  completedLessonIds: string[];
+  progress: number;
+  score: number;
+  lastAccess: Date;
+}
+
 export interface IUser extends Document {
   organizationId: Schema.Types.ObjectId;
   email: string;
@@ -57,6 +76,7 @@ export interface IUser extends Document {
   legacyWPHash?: string;
   coachProfile: any;
   stats: IUserStats;
+  coursesProgress: ICourseProgress[];
   createdAt: Date;
   updatedAt: Date;
 }
