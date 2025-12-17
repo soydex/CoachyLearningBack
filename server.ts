@@ -21,6 +21,7 @@ import sessionRoutes from './routes/sessions';
 import courseRoutes from './routes/courses';
 import notificationRoutes from './routes/notifications';
 import statisticsRoutes from './routes/statistics';
+import feedbackRoutes from './routes/feedback';
 import apiExplorerRoutes from './routes/api-explorer';
 import adminRoutes from './routes/admin';
 
@@ -60,6 +61,7 @@ app.use('/api/sessions', sessionRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/statistics', statisticsRoutes);
+app.use('/api/feedback', feedbackRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api-explorer', apiExplorerRoutes);
 

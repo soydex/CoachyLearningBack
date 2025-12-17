@@ -72,6 +72,11 @@ Cette interface permet de :
 - `POST /api/sessions/:id/assessments` - Ajoute une évaluation à une session
 - `GET /api/sessions/stats/overview` - Statistiques des sessions
 
+### Feedback (`/api/feedback`)
+- `POST /api/feedback` - Soumettre un avis sur une leçon
+- `GET /api/feedback/stats` - Statistiques globales des feedbacks (Admin/Coach)
+- `GET /api/feedback/course/:courseId` - Avis spécifiques à un cours
+
 ## 🔧 Fonctionnalités
 
 ### Validation
