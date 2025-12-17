@@ -405,4 +405,143 @@ router.post('/:id/progress', authenticateToken, async (req: AuthRequest, res) =>
   }
 });
 
+// POST /api/courses/:id/lessons/:lessonId/quiz/submit - Submit quiz answers
+router.post('/:id/lessons/:lessonId/quiz/submit', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const { answers } = req.body; // Object with questionId: answerIndex
+    const userId = req.user?.userId;
+    const courseId = req.params.id;
+    const lessonId = req.params.lessonId;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    const course = await Course.findOne({ id: courseId });
+    if (!course) {
+      return res.status(404).json({ error: 'Course not found' });
+    }
+
+    const allLessons = course.modules.flatMap(m => m.lessons);
+    const lesson = allLessons.find(l => l.id === lessonId);
+    
+    if (!lesson) {
+      return res.status(404).json({ error: 'Lesson not found' });
+    }
+
+    if (lesson.type !== 'QUIZ') {
+      return res.status(400).json({ error: 'Lesson is not a quiz' });
+    }
+
+    // Calculate score
+    let correctCount = 0;
+    const totalQuestions = lesson.questions.length;
+    const results = lesson.questions.map(q => {
+      const userAnswer = answers[q.id];
+      const isCorrect = userAnswer === q.correctAnswerIndex;
+      if (isCorrect) correctCount++;
+      return {
+        questionId: q.id,
+        isCorrect,
+        correctAnswer: q.correctAnswerIndex
+      };
+    });
+
+    const score = Math.round((correctCount / totalQuestions) * 100);
+    const passed = score >= 70; // 70% passing grade
+
+    // Update user progress if passed
+    if (passed) {
+      const user = await User.findById(userId);
+      if (user) {
+        let courseProgress = user.coursesProgress.find(cp => cp.courseId === courseId);
+        
+        if (!courseProgress) {
+          courseProgress = {
+            courseId,
+            completedLessonIds: [],
+            progress: 0,
+            score: 0,
+            lastAccess: new Date()
+          };
+          user.coursesProgress.push(courseProgress);
+        }
+
+        if (!courseProgress.completedLessonIds.includes(lessonId)) {
+          courseProgress.completedLessonIds.push(lessonId);
+        }
+
+        // Recalculate overall course progress
+        const totalLessons = allLessons.length;
+        const completedCount = courseProgress.completedLessonIds.length;
+        courseProgress.progress = totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
+        courseProgress.lastAccess = new Date();
+        
+        await user.save();
+      }
+    }
+
+    res.json({
+      passed,
+      score,
+      results
+    });
+
+  } catch (error) {
+    console.error('Quiz submission error:', error);
+    res.status(500).json({ error: 'Failed to submit quiz' });
+  }
+});
+
+// GET /api/courses/:id/certificate - Get course certificate
+router.get('/:id/certificate', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.user?.userId;
+    const courseId = req.params.id;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const course = await Course.findOne({ id: courseId });
+    if (!course) {
+      return res.status(404).json({ error: 'Course not found' });
+    }
+
+    const courseProgress = user.coursesProgress.find(cp => cp.courseId === courseId);
+    if (!courseProgress) {
+      return res.status(403).json({ error: 'Course not started' });
+    }
+
+    // Check if all lessons are completed
+    const allLessons = course.modules.flatMap(m => m.lessons);
+    const totalLessons = allLessons.length;
+    const completedCount = courseProgress.completedLessonIds.length;
+
+    if (completedCount < totalLessons) {
+      return res.status(403).json({ error: 'Course not completed' });
+    }
+
+    // Generate certificate data (mock for now)
+    const certificate = {
+      id: `cert-${userId}-${courseId}`,
+      studentName: user.name,
+      courseTitle: course.title,
+      completionDate: new Date(),
+      organization: 'CoachyLearning'
+    };
+
+    res.json(certificate);
+
+  } catch (error) {
+    console.error('Certificate error:', error);
+    res.status(500).json({ error: 'Failed to generate certificate' });
+  }
+});
+
 export default router;
