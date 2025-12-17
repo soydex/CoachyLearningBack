@@ -28,6 +28,12 @@ const LessonSchema = new Schema({
   type: { type: String, enum: Object.values(ContentType), required: true },
   duration: { type: String },
   content: { type: String }, // Storing HTML/Markdown content as string
+  videoUrl: { type: String }, // URL for Mux/Video
+  attachments: [{
+    title: { type: String, required: true },
+    url: { type: String, required: true },
+    type: { type: String, default: 'PDF' }
+  }],
   steps: [LessonStepSchema],
   questions: [QuizQuestionSchema],
 }, { _id: false });

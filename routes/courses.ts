@@ -346,4 +346,63 @@ router.delete('/:id/modules/:moduleId/lessons/:lessonId', authenticateToken, req
   }
 });
 
+// POST /api/courses/:id/progress - Update course progress
+router.post('/:id/progress', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const { lessonId, isCompleted } = req.body;
+    const userId = req.user?.userId;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'User not authenticated' });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Find or create course progress
+    let courseProgress = user.coursesProgress?.find(cp => cp.courseId === req.params.id);
+    
+    if (!courseProgress) {
+      if (!user.coursesProgress) user.coursesProgress = [];
+      user.coursesProgress.push({
+        courseId: req.params.id,
+        completedLessonIds: [],
+        progress: 0,
+        score: 0,
+        lastAccess: new Date()
+      });
+      courseProgress = user.coursesProgress[user.coursesProgress.length - 1];
+    }
+
+    // Update completed lessons
+    if (isCompleted) {
+      if (!courseProgress.completedLessonIds.includes(lessonId)) {
+        courseProgress.completedLessonIds.push(lessonId);
+      }
+    } else {
+      courseProgress.completedLessonIds = courseProgress.completedLessonIds.filter(id => id !== lessonId);
+    }
+
+    courseProgress.lastAccess = new Date();
+
+    // Calculate progress percentage
+    const course = await Course.findOne({ id: req.params.id });
+    if (course) {
+      let totalLessons = 0;
+      course.modules.forEach(m => totalLessons += m.lessons.length);
+      if (totalLessons > 0) {
+        courseProgress.progress = Math.round((courseProgress.completedLessonIds.length / totalLessons) * 100);
+      }
+    }
+
+    await user.save();
+    res.json(courseProgress);
+  } catch (error) {
+    console.error('Update progress error:', error);
+    res.status(500).json({ error: 'Failed to update progress' });
+  }
+});
+
 export default router;
