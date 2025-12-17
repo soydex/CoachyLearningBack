@@ -167,86 +167,80 @@ router.get("/", (req, res) => {
         .method-patch { background-color: #8b5cf6; }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="bg-zinc-50 min-h-screen">
     <div class="container mx-auto px-4 py-8">
         <div class="mb-8">
-            <h1 class="text-4xl font-bold text-gray-900 mb-2">API Explorer</h1>
-            <p class="text-lg text-gray-600">Coach y Média REST API Documentation</p>
-            <div class="mt-4 text-sm text-gray-500">
-                <strong>Base URL:</strong> <code class="bg-gray-100 px-2 py-1 rounded">http://localhost:3001</code>
+            <h1 class="text-4xl font-bold text-zinc-900 mb-2">API Explorer</h1>
+            <p class="text-lg text-zinc-600">Coach y Média REST API Documentation</p>
+            <div class="mt-4 text-sm text-zinc-500">
+                <strong>Base URL:</strong> <code class="bg-zinc-100 px-2 py-1 rounded">http://localhost:3001</code>
             </div>
         </div>
 
         <div class="grid gap-8">
             ${apiRoutes
-              .map(
-                (resource) => `
+      .map(
+        (resource) => `
                 <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                    <div class="bg-gray-800 text-white px-6 py-4">
-                        <h2 class="text-xl font-semibold">${
-                          resource.resource
-                        }</h2>
-                        <p class="text-gray-300 text-sm">Base path: <code>${
-                          resource.basePath
-                        }</code></p>
+                    <div class="bg-zinc-800 text-white px-6 py-4">
+                        <h2 class="text-xl font-semibold">${resource.resource
+          }</h2>
+                        <p class="text-zinc-300 text-sm">Base path: <code>${resource.basePath
+          }</code></p>
                     </div>
                     <div class="p-6">
                         <div class="space-y-4">
                             ${resource.routes
-                              .map(
-                                (route) => `
-                                <div class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+            .map(
+              (route) => `
+                                <div class="border border-zinc-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                                     <div class="flex items-start gap-4">
                                         <span class="method-${route.method.toLowerCase()} text-white px-3 py-1 rounded text-sm font-mono font-bold text-xs uppercase min-w-[60px] text-center">
                                             ${route.method}
                                         </span>
                                         <div class="flex-1">
                                             <div class="flex items-center gap-2 mb-2">
-                                                <code class="bg-gray-100 px-2 py-1 rounded text-sm font-mono">${
-                                                  route.path
-                                                }</code>
-                                                <button onclick="copyToClipboard('${
-                                                  route.path
-                                                }')" class="text-gray-400 hover:text-gray-600 text-sm">
+                                                <code class="bg-zinc-100 px-2 py-1 rounded text-sm font-mono">${route.path
+                }</code>
+                                                <button onclick="copyToClipboard('${route.path
+                }')" class="text-zinc-400 hover:text-zinc-600 text-sm">
                                                     📋
                                                 </button>
                                             </div>
-                                            <p class="text-gray-700 mb-2">${
-                                              route.description
-                                            }</p>
-                                            ${
-                                              route.params
-                                                ? `
-                                                <div class="text-sm text-gray-600">
-                                                    <strong>Query params:</strong> <code class="bg-gray-100 px-1 rounded">${route.params}</code>
+                                            <p class="text-zinc-700 mb-2">${route.description
+                }</p>
+                                            ${route.params
+                  ? `
+                                                <div class="text-sm text-zinc-600">
+                                                    <strong>Query params:</strong> <code class="bg-zinc-100 px-1 rounded">${route.params}</code>
                                                 </div>
                                             `
-                                                : ""
-                                            }
+                  : ""
+                }
                                         </div>
                                     </div>
                                 </div>
                             `
-                              )
-                              .join("")}
+            )
+            .join("")}
                         </div>
                     </div>
                 </div>
             `
-              )
-              .join("")}
+      )
+      .join("")}
         </div>
 
         <div class="mt-12 bg-white rounded-lg shadow-md p-6">
             <h3 class="text-xl font-semibold mb-4">Test the API</h3>
             <div class="grid md:grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Endpoint</label>
-                    <input type="text" id="endpoint" placeholder="/api/users" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <label class="block text-sm font-medium text-zinc-700 mb-2">Endpoint</label>
+                    <input type="text" id="endpoint" placeholder="/api/users" class="w-full px-3 py-2 border border-zinc-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Method</label>
-                    <select id="method" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <label class="block text-sm font-medium text-zinc-700 mb-2">Method</label>
+                    <select id="method" class="w-full px-3 py-2 border border-zinc-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <option value="GET">GET</option>
                         <option value="POST">POST</option>
                         <option value="PUT">PUT</option>
@@ -255,20 +249,20 @@ router.get("/", (req, res) => {
                 </div>
             </div>
             <div class="mt-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Request Body (JSON)</label>
-                <textarea id="requestBody" placeholder='{"name": "Test"}' class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-24 font-mono text-sm"></textarea>
+                <label class="block text-sm font-medium text-zinc-700 mb-2">Request Body (JSON)</label>
+                <textarea id="requestBody" placeholder='{"name": "Test"}' class="w-full px-3 py-2 border border-zinc-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 h-24 font-mono text-sm"></textarea>
             </div>
             <div class="mt-4 flex gap-2">
                 <button onclick="testEndpoint()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md font-medium">
                     Test Endpoint
                 </button>
-                <button onclick="clearResponse()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md font-medium">
+                <button onclick="clearResponse()" class="bg-zinc-500 hover:bg-zinc-600 text-white px-4 py-2 rounded-md font-medium">
                     Clear
                 </button>
             </div>
             <div class="mt-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Response</label>
-                <pre id="response" class="bg-gray-100 p-4 rounded-md text-sm font-mono overflow-x-auto max-h-96"></pre>
+                <label class="block text-sm font-medium text-zinc-700 mb-2">Response</label>
+                <pre id="response" class="bg-zinc-100 p-4 rounded-md text-sm font-mono overflow-x-auto max-h-96"></pre>
             </div>
         </div>
     </div>
@@ -308,7 +302,7 @@ router.get("/", (req, res) => {
                 }
 
                 responseDiv.innerHTML = \`<strong>\${response.status} \${response.statusText}</strong>\\n\\n\${formattedData}\`;
-                responseDiv.className = 'bg-gray-100 p-4 rounded-md text-sm font-mono overflow-x-auto max-h-96';
+                responseDiv.className = 'bg-zinc-100 p-4 rounded-md text-sm font-mono overflow-x-auto max-h-96';
             } catch (error) {
                 responseDiv.textContent = 'Error: ' + error.message;
                 responseDiv.className = 'bg-red-100 p-4 rounded-md text-sm font-mono overflow-x-auto max-h-96 text-red-800';

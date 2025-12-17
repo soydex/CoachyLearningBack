@@ -9,6 +9,10 @@ import Notification from "./models/Notification";
 import Quote from "./models/Quote";
 import bcrypt from "bcryptjs";
 
+declare var process: any;
+declare var require: any;
+declare var module: any;
+
 async function seedDatabase() {
   try {
     await dbConnect();
@@ -119,7 +123,7 @@ async function seedDatabase() {
         stats: { sessionsCompleted: 0 },
         coursesProgress: [],
       },
-    ] as any);
+    ] as any[]);
 
     console.log("👥 Users created");
 
@@ -162,190 +166,595 @@ async function seedDatabase() {
         progress: 0,
         modules: [
           {
-            id: "m1",
-            title: "Introduction & Bases",
+            id: "m0",
+            title: "Introduction et Présentation Générale",
             lessons: [
               {
-                id: "l1",
-                title: "Définir les objectifs",
+                id: "l0-1",
+                title: "Bienvenue",
                 type: "LESSON",
                 duration: "5 min",
-                content: `<div class="prose dark:prose-invert max-w-none">
-  <h3>Pourquoi définir des objectifs ?</h3>
-  <p>Définir des objectifs clairs est la première étape vers une gestion du temps efficace. Sans direction précise, il est facile de se perdre dans les tâches quotidiennes sans réellement progresser.</p>
-  <ul>
-    <li>Clarté mentale</li>
-    <li>Motivation accrue</li>
-    <li>Mesure du progrès</li>
-  </ul>
-</div>`
-              },
-              {
-                id: "l2",
-                title: "Planifier prioriser",
-                type: "LESSON",
-                duration: "5 min",
-              },
-            ],
+                content: `
+* « Je n’ai pas le temps !.. je n’ai plus le temps !.. Je manque de temps !.. Le temps passe vite ! » .. 
+
+* Combien de fois avons-nous prononcé ce type de phrases ?  A la question, « comment vas-tu? », n’avez-vous pas de nombreuses fois entendu la réponse « ne m’en parle pas, je suis débordé! »… 
+
+* Aujourd’hui, ce type d’échanges est fréquent et entame souvent une discussion en famille, entre amis ou collègues. 
+
+* Nous sommes à l’ère de la surabondance marquée par trop d’activités, trop de compétitions, trop d’informations, trop de rythme/stress, …difficile de garder la tête hors de l’eau… 
+
+* **86800 ?** Ce chiffre vous parle-t-il ? .. C’est le nombre de secondes à notre disposition dans une journée .. Un crédit renouvelé chaque matin mais la « source » s’épuise jour après jour.. 
+
+* Notre objectif chez Coachymédia, c’est d’attirer votre attention et de vous apporter des outils pour ne plus gaspiller ces précieuses secondes inutilement !!! 
+
+* Nous disposons tous de 24h par jour mais la différence, c’est ce que nous en faisons ! 
+
+* Dans les différents modules de ce programme, il s’agit d’apprendre à bien investir le temps dont on dispose : l’expression « gestion du temps » est un non-sens.. On ne peut malheureusement prendre une heure ce jour pour la reporter à demain .. Mais nous pouvons gérer ce sur quoi on décide de porter notre attention !! 
+
+* Coachymédia vous donnera une idée réaliste de ce que vous êtes capable d’accomplir et de ce qui vous prend le plus de temps, vous pourrez alors utiliser les astuces, les méthodes,… pour vous améliorer, changer vos habitudes et devenir plus performants. 
+
+* Bienvenue dans l’aventure qui vous permettra de devenir un expert redoutablement efficace de la gestion du temps !!! 
+`
+              }
+            ]
           },
           {
-            id: "m2",
-            title: "Organisation Quotidienne",
+            id: "m1",
+            title: "Module 1 : Définir des objectifs / Une stratégie",
             lessons: [
               {
-                id: "c1",
-                title: "Introduction : planifier prioriser",
-                type: "CHAPTER",
-                duration: "2 min",
+                id: "l1-1",
+                title: "Introduction et Concepts",
+                type: "LESSON",
+                duration: "5 min",
+                content: `
+* « Ce n’est pas que nous manquons de temps, c’est surtout que nous en perdons beaucoup » Socrate 
+
+* Bienvenue dans ce programme. Apprendre à gérer ce sur quoi on porte notre attention OU « la gestion du temps, c’est apprendre à choisir plutôt que de subir » Patrick Leroux 
+
+* Un objectif non défini dans le temps prend toujours du retard : la précipitation dans l'action fait finalement perdre du temps. 
+
+* **Mise en pratique :** Faites preuve de patience. Prenez le temps nécessaire pour la réflexion. Préparez-vous. 
+
+* Se fixer des objectifs c'est avant tout clarifier sa vision. Vous savez où vous voulez aller et à quelle vitesse. Cela vous permet de vous donner un cap ainsi qu'aux autres. 
+
+* En négligeant la stratégie, on libère peu de temps tout en augmentant drastiquement ses chances d'échouer. 
+`
               },
               {
-                id: "c2",
-                title: "La to-do list",
-                type: "CHAPTER",
+                id: "l1-2",
+                title: "Les Objectifs SMART",
+                type: "LESSON",
                 duration: "10 min",
-              },
-              {
-                id: "c3",
-                title: "Planifiez et priorisez vos tâches !",
-                type: "CHAPTER",
-                duration: "8 min",
+                content: `
+### Définition
+
+* Un objectif est un rêve doté d’une échéance (Napoléon Hill). L’objectif est la clé de voûte de la gestion du temps (Marc Roussel). 
+
+* George T. Doran donne naissance au concept SMART. Chaque objectif doit être **S**pécifique, **M**esurable, **A**tteignable, **R**éaliste et **T**emporellement défini. 
+
+* **S - SPÉCIFIQUE :** Utilisez des verbes d’action, soyez précis. 
+
+* **M - MESURABLE :** Utilisez des indicateurs faciles et précis. 
+
+* **A - ATTEIGNABLE :** Possible, dans votre champ d’action. 
+
+* **R - RÉALISTE :** En accord avec vos valeurs, objectifs à long terme. 
+
+* **T - TEMPOREL :** Indiquez quand vous le ferez, délai précis. 
+
+* La méthode SMART permet d'aligner et canaliser toutes les actions, maitriser le chrono et rester motivé. 
+
+### Exercice
+
+* *Exercice :* Prenez un objectif actuel dans votre entreprise et transformez-le en objectif SMART. 
+
+* *Exemple :* "Je veux augmenter mon taux de transformation prospects en clients de 30% d'ici fin 2023 grâce à une formation CRM". 
+`
               },
               {
                 id: "q1",
-                title: "Quiz Planifier prioriser",
+                title: "Quiz Module 1",
                 type: "QUIZ",
                 duration: "5 min",
                 questions: [
                   {
-                    id: "qq1",
-                    question:
-                      "Quelle est la première étape pour une planification efficace ?",
+                    id: "q1-1",
+                    question: "Quel est l’intérêt des objectifs SMART ?",
                     options: [
-                      "Commencer par les tâches les plus faciles",
-                      "Lister toutes les tâches à accomplir",
-                      "Faire une pause café",
-                      "Déléguer tout immédiatement",
+                      "Définir les détails d’un projet / Tenir les délais",
+                      "Rendre les objectifs plus complexes",
+                      "Ignorer les délais pour plus de qualité",
+                      "Se concentrer uniquement sur le long terme"
                     ],
-                    correctAnswerIndex: 1,
+                    correctAnswerIndex: 0
                   },
                   {
-                    id: "qq2",
-                    question:
-                      "Selon la matrice d'Eisenhower, une tâche 'Importante mais non Urgente' doit être :",
+                    id: "q1-2",
+                    question: "Que signifie l’acronyme SMART ?",
                     options: [
-                      "Fait immédiatement",
-                      "Planifiée pour plus tard",
-                      "Déléguée",
-                      "Supprimée",
+                      "Super Magnifique Amusant Rapide Terrible",
+                      "Spécifique Mesurable Atteignable Réaliste Temporel",
+                      "Stratégique Moyen Abstrait Réel Total",
+                      "Simple Mesuré Absolu Raisonnable Temporaire"
                     ],
-                    correctAnswerIndex: 1,
+                    correctAnswerIndex: 1
                   },
                   {
-                    id: "qq3",
-                    question: "Quel est l'avantage principal d'une To-Do List ?",
+                    id: "q1-3",
+                    question: "Quelle est la meilleure formule ?",
                     options: [
-                      "Décharger le cerveau et visualiser la charge de travail",
-                      "Avoir l'air occupé au bureau",
-                      "Utiliser beaucoup de papier",
-                      "Aucun avantage réel",
+                      "Action – réflexion – objectifs",
+                      "Objectifs – action – réflexion",
+                      "Réflexion – objectifs – action",
+                      "Action uniquement"
                     ],
-                    correctAnswerIndex: 0,
+                    correctAnswerIndex: 2
                   },
-                ],
+                  {
+                    id: "q1-4",
+                    question: "Que manque-t-il à l'objectif \"augmenter les ventes de 10% d'ici l'automne prochain\" ?",
+                    options: [
+                      "Il manque la partie Spécifique (de quoi ?) et Temporelle (date précise)",
+                      "Il manque la partie Mesurable",
+                      "Il est parfait",
+                      "Il manque la partie Réaliste"
+                    ],
+                    correctAnswerIndex: 0
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            id: "m2",
+            title: "Module 2 : Planifier & Prioriser",
+            lessons: [
+              {
+                id: "l2-1",
+                title: "Lois du temps",
+                type: "LESSON",
+                duration: "5 min",
+                content: `
+* **Loi de Murphy :** « Tout ce qui est susceptible d’aller mal, ira mal ». Rien ne se passe jamais comme prévu. Prévoyez une marge de manœuvre (environ 30 % du temps) pour les aléas. 
+
+* **Loi de Parkinson :** « Plus on a du temps pour réaliser une tâche et plus cette tâche prendra du temps ». Lorsqu’on ne fixe pas de deadline, les choses s’éternisent. Solution : fixez des dates butoirs courtes mais réalistes. 
+
+* « Si vous échouez la planification, vous planifiez l’échec. » Philip Kotler. 
+`
               },
-            ],
+              {
+                id: "l2-2",
+                title: "La To-Do List",
+                type: "LESSON",
+                duration: "10 min",
+                content: `
+* Concentrez-vous toujours sur l’importance et non pas sur l’urgence. 
+
+* La To Do List libère l’esprit, aide à se souvenir, permet de prioriser et aide à passer à l’action (cocher quand c’est fait). 
+
+* **Conseils :**
+* Choisissez votre support (papier, applis). 
+
+* Verbe d’action + mission + temps/date. 
+
+* Mélangez le pro et le perso pour alléger la charge mentale. 
+
+* Mixez des missions faciles et difficiles. 
+
+* Prévoir l’imprévu (45% du temps est souvent du non-prévu). 
+`
+              },
+              {
+                id: "q2",
+                title: "Quiz Module 2",
+                type: "QUIZ",
+                duration: "5 min",
+                questions: [
+                  {
+                    id: "q2-1",
+                    question: "Quel est l'intérêt de définir une tâche dans le temps selon Parkinson ?",
+                    options: [
+                      "Pour limiter la durée d’exécution",
+                      "Pour augmenter le stress",
+                      "Pour faire durer le plaisir",
+                      "Aucun intérêt"
+                    ],
+                    correctAnswerIndex: 0
+                  },
+                  {
+                    id: "q2-2",
+                    question: "Que recommande la loi de Murphy ?",
+                    options: [
+                      "De ne rien prévoir",
+                      "Prévoir un temps tampon pour l’imprévu",
+                      "D'être optimiste à 100%",
+                      "De travailler plus vite"
+                    ],
+                    correctAnswerIndex: 1
+                  },
+                  {
+                    id: "q2-3",
+                    question: "Quel est le pourcentage de temps passé sur du non-prévu ?",
+                    options: [
+                      "10%",
+                      "90%",
+                      "Environ 45%",
+                      "0%"
+                    ],
+                    correctAnswerIndex: 2
+                  },
+                  {
+                    id: "q2-4",
+                    question: "Quels sont les indispensables d'une to-do list ?",
+                    options: [
+                      "Uniquement les tâches urgentes",
+                      "Une liste sans fin",
+                      "Hiérarchiser et organiser vos tâches",
+                      "Écrire le plus petit possible"
+                    ],
+                    correctAnswerIndex: 2
+                  }
+                ]
+              }
+            ]
           },
           {
             id: "m3",
-            title: "Efficacité Relationnelle",
+            title: "Module 3 : Déléguer",
             lessons: [
               {
-                id: "l3",
-                title: "Déléguer",
+                id: "l3-1",
+                title: "Principe de Pareto (20/80)",
                 type: "LESSON",
-                duration: "6 min",
+                duration: "5 min",
+                content: `
+* 20 % de nos activités produisent 80 % du résultat. 
+
+* Identifiez les « 20 % » qui ont le plus d’impact et déléguez l’accessoire. 
+
+* Exemples : 80% des bénéfices viennent de 20% des clients. 
+`
               },
               {
-                id: "l4",
-                title: "Savoir dire non",
+                id: "l3-2",
+                title: "Obstacles à la délégation",
                 type: "LESSON",
-                duration: "6 min",
+                duration: "10 min",
+                content: `
+**Messages contraignants (freins à la délégation)**
+
+* Les messages intégrés dans l'enfance qui freinent la délégation :
+* FAIS PLAISIR (« je vais le faire »). 
+
+* SOIS PARFAIT (vérifier le travail des autres). 
+
+* SOIS FORT (« je suis débordé mais je vais m’en occuper »). 
+
+* FAIS DES EFFORTS. 
+
+* DÉPÊCHE-TOI. 
+`
               },
-            ],
+              {
+                id: "l3-3",
+                title: "La Matrice d'Eisenhower",
+                type: "LESSON",
+                duration: "10 min",
+                content: `
+* Outil pour prioriser (les "gros cailloux"). 
+
+* Classification des tâches :
+1. 
+**Faire :** Urgent et Important. 
+
+2. 
+**Planifier :** Important mais Non Urgent. 
+
+3. 
+**Déléguer :** Urgent mais Non Important. 
+
+4. 
+**Éliminer :** Non Urgent et Non Important. 
+`
+              },
+              {
+                id: "q3",
+                title: "Quiz Module 3",
+                type: "QUIZ",
+                duration: "5 min",
+                questions: [
+                  {
+                    id: "q3-1",
+                    question: "Quels sont les obstacles à la délégation ?",
+                    options: [
+                      "Le manque de personnel",
+                      "Les messages contraignants, la peur que ce soit mal fait",
+                      "Le coût financier",
+                      "Aucun obstacle"
+                    ],
+                    correctAnswerIndex: 1
+                  },
+                  {
+                    id: "q3-2",
+                    question: "Que dit la règle de Pareto ?",
+                    options: [
+                      "50% d'efforts pour 50% de résultats",
+                      "Tout est important",
+                      "20% des activités génèrent 80% du résultat",
+                      "Il faut tout déléguer"
+                    ],
+                    correctAnswerIndex: 2
+                  },
+                  {
+                    id: "q3-3",
+                    question: "Quelle est l'utilité de la matrice d'Eisenhower ?",
+                    options: [
+                      "Faire une belle liste",
+                      "Différencier les tâches urgentes des tâches importantes",
+                      "Classer par ordre alphabétique",
+                      "Gérer les emails uniquement"
+                    ],
+                    correctAnswerIndex: 1
+                  }
+                ]
+              }
+            ]
           },
           {
             id: "m4",
-            title: "Gérer ses ressources",
-            isOpen: true,
+            title: "Module 4 : Savoir dire Non",
             lessons: [
               {
-                id: "l5",
-                title: "Combattre la procrastination",
+                id: "l4-1",
+                title: "Le concept & Les 6 étapes",
                 type: "LESSON",
-                duration: "6 min",
+                duration: "10 min",
+                content: `
+* Savoir dire NON, c’est savoir dire OUI à ses priorités. 
+
+* C’est une étape essentielle de l’affirmation de soi. 
+
+**Les 6 étapes pour savoir dire non**
+
+1. S’assurer que le refus est légitime. 
+
+2. Travailler sur ses émotions (peur de ne plus faire carrière, peur d'être rejeté). 
+
+3. Travailler sur ses croyances limitantes (ex: "le manager a toujours raison"). 
+
+4. Prendre confiance en soi (commencer par des petits "non"). 
+
+5. Bien exprimer son refus (utiliser la Communication Non Violente : Faits, Ressenti, Besoin, Demande). 
+
+6. Accepter le "non" de l'autre ou sa réaction. 
+`
               },
               {
-                id: "l6",
-                title: "Gérer ses niveaux d'énergie",
+                id: "l4-2",
+                title: "Astuces pour se préserver",
                 type: "LESSON",
                 duration: "5 min",
-                steps: [
-                  {
-                    id: "s1",
-                    title: "Introduction : gérer ses niveaux d’énergie",
-                    isCompleted: false,
-                  },
-                  {
-                    id: "s2",
-                    title: "Les 4 types d'énergie",
-                    isCompleted: false,
-                  },
-                  {
-                    id: "s3",
-                    title: "L'efficience par le rythme biologique",
-                    isCompleted: false,
-                  },
-                  {
-                    id: "s4",
-                    title: "Outil : alléger le cerveau",
-                    isCompleted: false,
-                  },
-                ],
-                content: `<div class="space-y-8">
-  <div class="border-l-4 border-brand-600 pl-6 py-2 bg-blue-50 rounded-r-lg">
-    <h3 class="text-xl font-serif italic text-slate-700">
-      « Mettre tout en équilibre, c’est bien. Mettre tout en harmonie, c’est mieux »
-    </h3>
-    <p class="mt-2 text-sm font-semibold text-slate-500">
-      — Victor Hugo
-    </p>
-  </div>
-  <div class="prose prose-slate max-w-none text-slate-600 leading-relaxed">
-    <p>Si vous avez déjà eu à gérer plusieurs projets de front, vous avez sans doute vécu cette sensation de perte de contrôle et de manque d’énergie.</p>
-    <p>On a tous tendance à vouloir toujours en faire plus… comme s’il s’agissait de prouver quelque chose…</p>
-    <p class="font-medium text-slate-800">Or, il est capital de savoir se ménager et d’apprendre à connaître ses niveaux d’énergie pour être efficace sur la durée.</p>
-  </div>
-  <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-    <h4 class="font-bold text-slate-900 mb-4 flex items-center gap-2">
-      Rappel des modules précédents
-    </h4>
-    <p class="mb-4 text-slate-600">On a vu au cours des 5 premiers modules qu’une personne qui gère bien son temps sera capable de :</p>
-    <ul class="grid grid-cols-1 md:grid-cols-2 gap-3">
-      <li class="flex items-center gap-2 text-slate-700 bg-slate-50 p-2 rounded border border-slate-100"><div class="w-1.5 h-1.5 rounded-full bg-brand-500"></div>se fixer des objectifs</li>
-      <li class="flex items-center gap-2 text-slate-700 bg-slate-50 p-2 rounded border border-slate-100"><div class="w-1.5 h-1.5 rounded-full bg-brand-500"></div>prioriser</li>
-      <li class="flex items-center gap-2 text-slate-700 bg-slate-50 p-2 rounded border border-slate-100"><div class="w-1.5 h-1.5 rounded-full bg-brand-500"></div>déléguer</li>
-      <li class="flex items-center gap-2 text-slate-700 bg-slate-50 p-2 rounded border border-slate-100"><div class="w-1.5 h-1.5 rounded-full bg-brand-500"></div>savoir dire non</li>
-      <li class="flex items-center gap-2 text-slate-700 bg-slate-50 p-2 rounded border border-slate-100"><div class="w-1.5 h-1.5 rounded-full bg-brand-500"></div>combattre la procrastination</li>
-    </ul>
-  </div>
-  <div class="bg-blue-900 text-white p-6 rounded-xl shadow-lg">
-    <p class="font-medium text-lg text-center">Mais gérer son énergie est encore autre chose, puisque sans elle, vous ne pourrez pas mettre en place tout ce qui est nécessaire, important, capital sur la durée !</p>
-  </div>
-</div>`,
+                content: `
+**Astuces pour se préserver**
+
+* Couper les notifications, fermer sa porte, communiquer sur son indisponibilité. 
+
+* Planifier des créneaux de 1h30 maximum pour une concentration efficace. 
+`
               },
-            ],
+              {
+                id: "q4",
+                title: "Quiz Module 4",
+                type: "QUIZ",
+                duration: "5 min",
+                questions: [
+                  {
+                    id: "q4-1",
+                    question: "Quel est l'intérêt de savoir dire non ?",
+                    options: [
+                      "Être désagréable",
+                      "Rester concentré sur ses priorités",
+                      "Éviter le travail",
+                      "Montrer son autorité"
+                    ],
+                    correctAnswerIndex: 1
+                  },
+                  {
+                    id: "q4-2",
+                    question: "Combien de temps faut-il pour se reconcentrer après une interruption ?",
+                    options: [
+                      "Instantané",
+                      "1 minute",
+                      "De 3 minutes à 20 minutes",
+                      "1 heure"
+                    ],
+                    correctAnswerIndex: 2
+                  },
+                  {
+                    id: "q4-3",
+                    question: "Comment dire non efficacement ?",
+                    options: [
+                      "Ignorer la demande",
+                      "Dire non sans explication",
+                      "Communiquer sur son indisponibilité",
+                      "Reporter indéfiniment"
+                    ],
+                    correctAnswerIndex: 2
+                  }
+                ]
+              }
+            ]
           },
-        ],
+          {
+            id: "m5",
+            title: "Module 5 : Combattre la Procrastination",
+            lessons: [
+              {
+                id: "l5-1",
+                title: "Comprendre la procrastination",
+                type: "LESSON",
+                duration: "5 min",
+                content: `
+**Comprendre la procrastination**
+
+* Ce n'est pas de la paresse, c'est une stratégie de protection (peur de l'échec, perfectionnisme). 
+
+* **Loi de Laborit :** L’individu cherche naturellement à éviter les tâches difficiles (fuite devant la douleur) pour privilégier le plaisir immédiat. 
+`
+              },
+              {
+                id: "l5-2",
+                title: "Outil pour agir",
+                type: "LESSON",
+                duration: "10 min",
+                content: `
+**Outils pour agir**
+
+* **Règle des 5 secondes (Mel Robbins) :** Comptez 5 – 4 – 3 – 2 – 1 et agissez immédiatement avant que le cerveau ne trouve des excuses. 
+
+* **Méthode Pomodoro :** Travailler intensément 25 minutes, puis 5 minutes de pause. Répéter 4 fois puis prendre une pause longue (20 min). 
+
+* Commencer la journée par le plus difficile (avaler le crapaud). 
+`
+              },
+              {
+                id: "q5",
+                title: "Quiz Module 5",
+                type: "QUIZ",
+                duration: "5 min",
+                questions: [
+                  {
+                    id: "q5-1",
+                    question: "Quelles sont les causes de la procrastination ?",
+                    options: [
+                      "La fatigue uniquement",
+                      "Distraction, perfectionnisme, peur de l’inconnu, etc.",
+                      "Le manque de compétence",
+                      "L'excès de travail"
+                    ],
+                    correctAnswerIndex: 1
+                  },
+                  {
+                    id: "q5-2",
+                    question: "Que dit la loi de Laborit ?",
+                    options: [
+                      "Il faut fuir le plaisir",
+                      "Il faut rechercher la douleur",
+                      "On fuit la difficulté / Il faut commencer par le difficile",
+                      "Tout travail mérite salaire"
+                    ],
+                    correctAnswerIndex: 2
+                  },
+                  {
+                    id: "q5-3",
+                    question: "Quelle technique aide à passer à l'action immédiatement ?",
+                    options: [
+                      "La méthode des 5 minutes",
+                      "La règle des 5 secondes",
+                      "L'attente active",
+                      "La sieste flash"
+                    ],
+                    correctAnswerIndex: 1
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            id: "m6",
+            title: "Module 6 : Gérer ses niveaux d'énergie",
+            lessons: [
+              {
+                id: "l6-1",
+                title: "Concept & Les 4 types d'énergie",
+                type: "LESSON",
+                duration: "10 min",
+                content: `
+**Concept**
+
+* Nous avons un temps limité et une énergie limitée. Il faut gérer les deux. 
+
+* L'efficience passe par la prise en compte de ses rythmes biologiques (heures, saisons, sommeil). 
+
+**Les 4 types d'énergie**
+
+1. 
+**Physique :** Sommeil, alimentation, mouvement. 
+
+2. 
+**Mentale/Intellectuelle :** Connaissances, exploration. 
+
+3. 
+**Émotionnelle :** Gestion du stress, lâcher prise. 
+
+4. 
+**Motivationnelle :** Ambitions, objectifs (la plus puissante mais elle use). 
+`
+              },
+              {
+                id: "l6-2",
+                title: "Conseils pour alléger le cerveau",
+                type: "LESSON",
+                duration: "5 min",
+                content: `
+**Conseils pour alléger le cerveau**
+
+* Notez tout sur un seul support. 
+
+* Ne commencez pas la journée par vos emails. 
+
+* Rangez (on perd 7h/semaine à chercher). 
+
+* Dormez (le cerveau range et nettoie la nuit). 
+
+* Acceptez de vous ennuyer. 
+`
+              },
+              {
+                id: "q6",
+                title: "Quiz Module 6",
+                type: "QUIZ",
+                duration: "5 min",
+                questions: [
+                  {
+                    id: "q6-1",
+                    question: "Quels éléments biologiques influencent l'efficience ?",
+                    options: [
+                      "Uniquement l'alimentation",
+                      "Heures, saisons, alimentation, ensoleillement",
+                      "La température extérieure seulement",
+                      "L'âge"
+                    ],
+                    correctAnswerIndex: 1
+                  },
+                  {
+                    id: "q6-2",
+                    question: "Quels sont les 4 types d'énergie ?",
+                    options: [
+                      "Eau, Terre, Feu, Air",
+                      "Physique, nucléaire, éolienne, solaire",
+                      "Physique, mentale, émotionnelle, motivationnelle",
+                      "Positive, négative, neutre, absente"
+                    ],
+                    correctAnswerIndex: 2
+                  },
+                  {
+                    id: "q6-3",
+                    question: "Comment alléger notre cerveau ?",
+                    options: [
+                      "Travailler plus la nuit",
+                      "Lister, dormir, ne pas lire ses mails en arrivant, ranger",
+                      "Manger moins",
+                      "Regarder la télévision"
+                    ],
+                    correctAnswerIndex: 1
+                  }
+                ]
+              }
+            ]
+          },
+        ]
       },
       {
         id: "c2",
@@ -420,7 +829,7 @@ async function seedDatabase() {
           },
         ],
       },
-    ] as any);
+    ] as any[]);
 
     const capsule1 = capsules[0];
     const capsule2 = capsules[1];
@@ -460,7 +869,7 @@ async function seedDatabase() {
         status: "SCHEDULED",
         videoUrl: "",
       },
-    ] as any);
+    ] as any[]);
 
     console.log("📅 Sessions created");
 
