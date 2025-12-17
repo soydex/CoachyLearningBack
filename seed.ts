@@ -6,6 +6,7 @@ import Capsule from "./models/Capsule";
 import Session from "./models/Session";
 import Course from "./models/Course";
 import Notification from "./models/Notification";
+import Quote from "./models/Quote";
 import bcrypt from "bcryptjs";
 
 async function seedDatabase() {
@@ -20,6 +21,7 @@ async function seedDatabase() {
     await Session.deleteMany({});
     await Course.deleteMany({});
     await Notification.deleteMany({});
+    await Quote.deleteMany({});
     console.log("🧹 Database cleared");
 
     // Create organizations
@@ -462,6 +464,31 @@ async function seedDatabase() {
 
     console.log("📅 Sessions created");
 
+    // Create quotes
+    await Quote.create([
+      {
+        text: "L'apprentissage est la seule chose que l'esprit n'épuise jamais, ne craint jamais et ne regrette jamais.",
+        author: "Léonard de Vinci",
+      },
+      {
+        text: "L'éducation est l'arme la plus puissante qu'on puisse utiliser pour changer le monde.",
+        author: "Nelson Mandela",
+      },
+      {
+        text: "Investir dans le savoir rapporte toujours les meilleurs intérêts.",
+        author: "Benjamin Franklin",
+      },
+      {
+        text: "La seule façon de faire du bon travail est d'aimer ce que vous faites.",
+        author: "Steve Jobs",
+      },
+      {
+        text: "Le succès n'est pas la clé du bonheur. Le bonheur est la clé du succès. Si vous aimez ce que vous faites, vous réussirez.",
+        author: "Albert Schweitzer",
+      },
+    ]);
+    console.log("💬 Quotes created");
+
     console.log("\n🎉 Database seeded successfully!");
     console.log("\n📊 Summary:");
     console.log(`   Organizations: ${await Organization.countDocuments()}`);
@@ -469,6 +496,7 @@ async function seedDatabase() {
     console.log(`   Courses: ${await Course.countDocuments()}`);
     console.log(`   Capsules: ${await Capsule.countDocuments()}`);
     console.log(`   Sessions: ${await Session.countDocuments()}`);
+    console.log(`   Quotes: ${await Quote.countDocuments()}`);
 
     console.log("\n🔗 API Explorer: http://localhost:3001/api-explorer");
     console.log("🚀 Server: http://localhost:3001");
