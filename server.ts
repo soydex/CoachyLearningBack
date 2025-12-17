@@ -24,13 +24,14 @@ import statisticsRoutes from './routes/statistics';
 import feedbackRoutes from './routes/feedback';
 import apiExplorerRoutes from './routes/api-explorer';
 import adminRoutes from './routes/admin';
+import uploadRoutes from './routes/upload';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://127.0.0.1:3000'],
+  origin: ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://192.168.1.37:3000'],
   credentials: true
 }));
 app.use(helmet({
@@ -63,6 +64,7 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/statistics', statisticsRoutes);
 app.use('/api/feedback', feedbackRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/upload', uploadRoutes);
 app.use('/api-explorer', apiExplorerRoutes);
 
 // Health check

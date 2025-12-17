@@ -168,17 +168,15 @@ async function seedDatabase() {
                 title: "Définir les objectifs",
                 type: "LESSON",
                 duration: "5 min",
-                content: `
-                  <div class="prose dark:prose-invert max-w-none">
-                    <h3>Pourquoi définir des objectifs ?</h3>
-                    <p>Définir des objectifs clairs est la première étape vers une gestion du temps efficace. Sans direction précise, il est facile de se perdre dans les tâches quotidiennes sans réellement progresser.</p>
-                    <ul>
-                      <li>Clarté mentale</li>
-                      <li>Motivation accrue</li>
-                      <li>Mesure du progrès</li>
-                    </ul>
-                  </div>
-                `
+                content: `<div class="prose dark:prose-invert max-w-none">
+  <h3>Pourquoi définir des objectifs ?</h3>
+  <p>Définir des objectifs clairs est la première étape vers une gestion du temps efficace. Sans direction précise, il est facile de se perdre dans les tâches quotidiennes sans réellement progresser.</p>
+  <ul>
+    <li>Clarté mentale</li>
+    <li>Motivation accrue</li>
+    <li>Mesure du progrès</li>
+  </ul>
+</div>`
               },
               {
                 id: "l2",

@@ -197,6 +197,25 @@ router.post('/:userId/courses/:courseId/lessons/:lessonId/toggle', authenticateT
       isCompleted = true;
     }
 
+    // Calculate progress
+    try {
+      
+      const CourseModel = (await import('../models/Course')).default;
+      const course = await CourseModel.findOne({ id: courseId });
+      
+      if (course) {
+        const totalLessons = course.modules.reduce((acc: number, m: any) => acc + m.lessons.length, 0);
+        if (totalLessons > 0) {
+          courseProgress.progress = Math.round((courseProgress.completedLessonIds.length / totalLessons) * 100);
+        } else {
+          courseProgress.progress = 100; // If no lessons, technically complete? Or 0? Let's say 100 if completed ids >= 0? No, 0 is safer.
+          if (course.modules.length === 0) courseProgress.progress = 100; // Empty course is complete
+        }
+      }
+    } catch (err) {
+      console.error("Error calculating progress:", err);
+    }
+
     // Update last access
     courseProgress.lastAccess = new Date();
 
@@ -205,7 +224,8 @@ router.post('/:userId/courses/:courseId/lessons/:lessonId/toggle', authenticateT
     res.json({ 
       message: 'Lesson completion toggled', 
       isCompleted, 
-      completedLessonIds: courseProgress.completedLessonIds 
+      completedLessonIds: courseProgress.completedLessonIds,
+      progress: courseProgress.progress
     });
 
   } catch (error) {

@@ -46,6 +46,8 @@ const UserSchema = new Schema(
     // Sécurité
     password: { type: String, required: false }, // Bcrypt hash
     legacyWPHash: { type: String, required: false }, // PHPass hash
+    // Avatar URL
+    avatarUrl: { type: String, required: false },
     // Profil Coach (optionnel)
     coachProfile: { type: Schema.Types.Mixed, default: {} },
     // Stats (embedded)
@@ -69,6 +71,7 @@ const UserZod = z.object({
   role: z.enum(["USER", "MANAGER", "COACH", "ADMIN"]),
   password: z.string().optional(),
   legacyWPHash: z.string().optional(),
+  avatarUrl: z.string().optional(),
   coachProfile: z.record(z.string(), z.any()).default({}),
   stats: UserStatsZod.default({ sessionsCompleted: 0 }),
 });
@@ -94,6 +97,7 @@ export interface IUser extends Document {
   role: "USER" | "MANAGER" | "COACH" | "ADMIN";
   password?: string;
   legacyWPHash?: string;
+  avatarUrl?: string;
   coachProfile: any;
   stats: IUserStats;
   coursesProgress: ICourseProgress[];
