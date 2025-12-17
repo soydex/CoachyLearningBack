@@ -199,4 +199,151 @@ router.post('/:id/lessons/:lessonId/complete', authenticateToken, async (req: an
   }
 });
 
+// PUT /api/courses/:id - Update course details
+router.put('/:id', authenticateToken, requireRole(['COACH', 'ADMIN']), async (req, res) => {
+  try {
+    const { title, category } = req.body;
+    const course = await Course.findOne({ id: req.params.id });
+    
+    if (!course) {
+      return res.status(404).json({ error: 'Course not found' });
+    }
+
+    if (title) course.title = title;
+    if (category) course.category = category;
+
+    await course.save();
+    res.json(course);
+  } catch (error) {
+    console.error('Update course error:', error);
+    res.status(500).json({ error: 'Failed to update course' });
+  }
+});
+
+// DELETE /api/courses/:id - Delete a course
+router.delete('/:id', authenticateToken, requireRole(['COACH', 'ADMIN']), async (req, res) => {
+  try {
+    const result = await Course.deleteOne({ id: req.params.id });
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ error: 'Course not found' });
+    }
+    res.json({ message: 'Course deleted successfully' });
+  } catch (error) {
+    console.error('Delete course error:', error);
+    res.status(500).json({ error: 'Failed to delete course' });
+  }
+});
+
+// PUT /api/courses/:id/modules/:moduleId - Update a module
+router.put('/:id/modules/:moduleId', authenticateToken, requireRole(['COACH', 'ADMIN']), async (req, res) => {
+  try {
+    const { title } = req.body;
+    const course = await Course.findOne({ id: req.params.id });
+    
+    if (!course) {
+      return res.status(404).json({ error: 'Course not found' });
+    }
+
+    const module = course.modules.find(m => m.id === req.params.moduleId);
+    if (!module) {
+      return res.status(404).json({ error: 'Module not found' });
+    }
+
+    if (title) module.title = title;
+
+    await course.save();
+    res.json(module);
+  } catch (error) {
+    console.error('Update module error:', error);
+    res.status(500).json({ error: 'Failed to update module' });
+  }
+});
+
+// DELETE /api/courses/:id/modules/:moduleId - Delete a module
+router.delete('/:id/modules/:moduleId', authenticateToken, requireRole(['COACH', 'ADMIN']), async (req, res) => {
+  try {
+    const course = await Course.findOne({ id: req.params.id });
+    
+    if (!course) {
+      return res.status(404).json({ error: 'Course not found' });
+    }
+
+    const initialLength = course.modules.length;
+    course.modules = course.modules.filter(m => m.id !== req.params.moduleId);
+
+    if (course.modules.length === initialLength) {
+      return res.status(404).json({ error: 'Module not found' });
+    }
+
+    await course.save();
+    res.json({ message: 'Module deleted successfully' });
+  } catch (error) {
+    console.error('Delete module error:', error);
+    res.status(500).json({ error: 'Failed to delete module' });
+  }
+});
+
+// PUT /api/courses/:id/modules/:moduleId/lessons/:lessonId - Update a lesson
+router.put('/:id/modules/:moduleId/lessons/:lessonId', authenticateToken, requireRole(['COACH', 'ADMIN']), async (req, res) => {
+  try {
+    const { title, type, duration, content, questions } = req.body;
+    const course = await Course.findOne({ id: req.params.id });
+    
+    if (!course) {
+      return res.status(404).json({ error: 'Course not found' });
+    }
+
+    const module = course.modules.find(m => m.id === req.params.moduleId);
+    if (!module) {
+      return res.status(404).json({ error: 'Module not found' });
+    }
+
+    const lesson = module.lessons.find(l => l.id === req.params.lessonId);
+    if (!lesson) {
+      return res.status(404).json({ error: 'Lesson not found' });
+    }
+
+    if (title) lesson.title = title;
+    if (type) lesson.type = type;
+    if (duration) lesson.duration = duration;
+    if (content !== undefined) lesson.content = content;
+    if (questions) lesson.questions = questions;
+
+    await course.save();
+    res.json(lesson);
+  } catch (error) {
+    console.error('Update lesson error:', error);
+    res.status(500).json({ error: 'Failed to update lesson' });
+  }
+});
+
+// DELETE /api/courses/:id/modules/:moduleId/lessons/:lessonId - Delete a lesson
+router.delete('/:id/modules/:moduleId/lessons/:lessonId', authenticateToken, requireRole(['COACH', 'ADMIN']), async (req, res) => {
+  try {
+    const course = await Course.findOne({ id: req.params.id });
+    
+    if (!course) {
+      return res.status(404).json({ error: 'Course not found' });
+    }
+
+    const module = course.modules.find(m => m.id === req.params.moduleId);
+    if (!module) {
+      return res.status(404).json({ error: 'Module not found' });
+    }
+
+    const initialLength = module.lessons.length;
+    module.lessons = module.lessons.filter(l => l.id !== req.params.lessonId);
+
+    if (module.lessons.length === initialLength) {
+      return res.status(404).json({ error: 'Lesson not found' });
+    }
+
+    await course.save();
+    res.json({ message: 'Lesson deleted successfully' });
+  } catch (error) {
+    console.error('Delete lesson error:', error);
+    res.status(500).json({ error: 'Failed to delete lesson' });
+  }
+});
+
 export default router;
