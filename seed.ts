@@ -42,9 +42,17 @@ async function seedDatabase() {
     console.log("🏢 Organizations created");
 
     const hashedPassword = await bcrypt.hash("password123", 10);
-
+    const hashedPassword2 = await bcrypt.hash("Tristan2", 10);
     // Create users
     const users: IUser[] = await User.create([
+      {
+        organizationId: org2._id as any,
+        email: "tristan.simon-derouard@comymedia.fr",
+        name: "Tristan Simon-Derouard",
+        role: "ADMIN",
+        password: hashedPassword2,
+        stats: { sessionsCompleted: 0 },
+      },
       {
         organizationId: org1._id as any,
         email: "admin@coachymedia.fr",
@@ -836,8 +844,18 @@ async function seedDatabase() {
 
     console.log("📦 Capsules created");
 
-    // Create sessions
+    // Create sessions - including sessions for the last 7 days to populate the energy chart
+    // Helper to create dates relative to today
+    const today = new Date();
+    const getDateAgo = (daysAgo: number, hour: number = 10) => {
+      const date = new Date(today);
+      date.setDate(date.getDate() - daysAgo);
+      date.setHours(hour, 0, 0, 0);
+      return date;
+    };
+
     const sessions = await Session.create([
+      // Historic session
       {
         capsuleId: (capsule1._id as any),
         coachId: (users[1]._id as any),
@@ -859,6 +877,155 @@ async function seedDatabase() {
           },
         ],
       },
+      // Sessions for the last 7 days - For student1 (Thomas Anderson, users[4])
+      {
+        capsuleId: (capsule1._id as any),
+        coachId: (users[1]._id as any),
+        attendees: [(users[4]._id as any)],
+        startTime: getDateAgo(6, 10),
+        endTime: getDateAgo(6, 11),
+        duration: 60,
+        status: "COMPLETED",
+        videoUrl: "https://example.com/session-day6",
+        assessments: [
+          {
+            raterId: (users[1]._id as any),
+            targetId: (users[4]._id as any),
+            leadership: 6,
+            communication: 7,
+            adaptability: 6,
+            emotionalInt: 7,
+            comment: "Bonne première session, bases solides",
+          },
+        ],
+      },
+      {
+        capsuleId: (capsule1._id as any),
+        coachId: (users[1]._id as any),
+        attendees: [(users[4]._id as any)],
+        startTime: getDateAgo(5, 14),
+        endTime: getDateAgo(5, 15),
+        duration: 60,
+        status: "COMPLETED",
+        videoUrl: "https://example.com/session-day5",
+        assessments: [
+          {
+            raterId: (users[1]._id as any),
+            targetId: (users[4]._id as any),
+            leadership: 7,
+            communication: 7,
+            adaptability: 7,
+            emotionalInt: 6,
+            comment: "Progression notable en leadership",
+          },
+        ],
+      },
+      {
+        capsuleId: (capsule1._id as any),
+        coachId: (users[1]._id as any),
+        attendees: [(users[4]._id as any)],
+        startTime: getDateAgo(4, 9),
+        endTime: getDateAgo(4, 10),
+        duration: 60,
+        status: "COMPLETED",
+        videoUrl: "https://example.com/session-day4",
+        assessments: [
+          {
+            raterId: (users[1]._id as any),
+            targetId: (users[4]._id as any),
+            leadership: 8,
+            communication: 8,
+            adaptability: 7,
+            emotionalInt: 8,
+            comment: "Excellente session, bonne énergie",
+          },
+        ],
+      },
+      {
+        capsuleId: (capsule1._id as any),
+        coachId: (users[1]._id as any),
+        attendees: [(users[4]._id as any)],
+        startTime: getDateAgo(3, 11),
+        endTime: getDateAgo(3, 12),
+        duration: 60,
+        status: "COMPLETED",
+        videoUrl: "https://example.com/session-day3",
+        assessments: [
+          {
+            raterId: (users[1]._id as any),
+            targetId: (users[4]._id as any),
+            leadership: 7,
+            communication: 9,
+            adaptability: 8,
+            emotionalInt: 8,
+            comment: "Communication en nette amélioration",
+          },
+        ],
+      },
+      {
+        capsuleId: (capsule1._id as any),
+        coachId: (users[1]._id as any),
+        attendees: [(users[4]._id as any)],
+        startTime: getDateAgo(2, 10),
+        endTime: getDateAgo(2, 11),
+        duration: 60,
+        status: "COMPLETED",
+        videoUrl: "https://example.com/session-day2",
+        assessments: [
+          {
+            raterId: (users[1]._id as any),
+            targetId: (users[4]._id as any),
+            leadership: 8,
+            communication: 8,
+            adaptability: 9,
+            emotionalInt: 7,
+            comment: "Adaptabilité remarquable",
+          },
+        ],
+      },
+      {
+        capsuleId: (capsule1._id as any),
+        coachId: (users[1]._id as any),
+        attendees: [(users[4]._id as any)],
+        startTime: getDateAgo(1, 15),
+        endTime: getDateAgo(1, 16),
+        duration: 60,
+        status: "COMPLETED",
+        videoUrl: "https://example.com/session-day1",
+        assessments: [
+          {
+            raterId: (users[1]._id as any),
+            targetId: (users[4]._id as any),
+            leadership: 9,
+            communication: 8,
+            adaptability: 8,
+            emotionalInt: 9,
+            comment: "Excellente progression globale",
+          },
+        ],
+      },
+      {
+        capsuleId: (capsule1._id as any),
+        coachId: (users[1]._id as any),
+        attendees: [(users[4]._id as any)],
+        startTime: getDateAgo(0, 9),
+        endTime: getDateAgo(0, 10),
+        duration: 60,
+        status: "COMPLETED",
+        videoUrl: "https://example.com/session-today",
+        assessments: [
+          {
+            raterId: (users[1]._id as any),
+            targetId: (users[4]._id as any),
+            leadership: 9,
+            communication: 9,
+            adaptability: 9,
+            emotionalInt: 8,
+            comment: "Session optimale, très bonne dynamique",
+          },
+        ],
+      },
+      // Scheduled session for the future
       {
         capsuleId: (capsule2._id as any),
         coachId: (users[3]._id as any),
@@ -871,7 +1038,7 @@ async function seedDatabase() {
       },
     ] as any[]);
 
-    console.log("📅 Sessions created");
+    console.log("📅 Sessions created (including 7-day energy data)");
 
     // Create quotes
     await Quote.create([
