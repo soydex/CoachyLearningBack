@@ -8,9 +8,8 @@ const router = express.Router();
 router.get('/users', authenticateToken, requireRole(['ADMIN']), async (req, res) => {
   try {
     const users = await User.find()
-      .select('-password -legacyWPHash')
-      .populate('organizationId', 'name');
-    
+      .select('-password -legacyWPHash');
+
     res.json(users);
   } catch (error) {
     console.error('Fetch users error:', error);

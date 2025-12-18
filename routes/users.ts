@@ -7,14 +7,12 @@ const router = express.Router();
 // GET /api/users - Get all users
 router.get('/', async (req, res) => {
   try {
-    const { page = 1, limit = 10, organizationId, role } = req.query;
+    const { page = 1, limit = 10, role } = req.query;
 
     const query: any = {};
-    if (organizationId) query.organizationId = organizationId;
     if (role) query.role = role;
 
     const users = await User.find(query)
-      .populate('organizationId', 'name')
       .limit(Number(limit) * 1)
       .skip((Number(page) - 1) * Number(limit))
       .sort({ createdAt: -1 });
@@ -38,7 +36,7 @@ router.get('/', async (req, res) => {
 // GET /api/users/:id - Get user by ID
 router.get('/:id', async (req, res) => {
   try {
-    const user = await User.findById(req.params.id).populate('organizationId', 'name');
+    const user = await User.findById(req.params.id);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -54,7 +52,6 @@ router.post('/', async (req, res) => {
     const validatedData = UserZod.parse(req.body);
     const user = new User(validatedData);
     await user.save();
-    await user.populate('organizationId', 'name');
     res.status(201).json(user);
   } catch (error: any) {
     if (error.name === 'ZodError') {
@@ -75,7 +72,7 @@ router.put('/:id', async (req, res) => {
       req.params.id,
       validatedData,
       { new: true, runValidators: true }
-    ).populate('organizationId', 'name');
+    );
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
@@ -146,9 +143,9 @@ router.delete('/:id/courses/:courseId', authenticateToken, async (req: AuthReque
     user.coursesProgress = user.coursesProgress.filter(cp => cp.courseId !== courseId);
     await user.save();
 
-    res.json({ 
+    res.json({
       message: 'Course acquisition removed',
-      coursesProgress: user.coursesProgress 
+      coursesProgress: user.coursesProgress
     });
   } catch (error) {
     console.error('Remove course acquisition error:', error);
@@ -186,7 +183,7 @@ router.post('/:userId/courses/:courseId/lessons/:lessonId/toggle', authenticateT
     // Toggle lesson completion
     const lessonIndex = courseProgress.completedLessonIds.indexOf(lessonId);
     let isCompleted = false;
-    
+
     if (lessonIndex > -1) {
       // Remove lesson (uncomplete)
       courseProgress.completedLessonIds.splice(lessonIndex, 1);
@@ -199,10 +196,10 @@ router.post('/:userId/courses/:courseId/lessons/:lessonId/toggle', authenticateT
 
     // Calculate progress
     try {
-      
+
       const CourseModel = (await import('../models/Course')).default;
       const course = await CourseModel.findOne({ id: courseId });
-      
+
       if (course) {
         const totalLessons = course.modules.reduce((acc: number, m: any) => acc + m.lessons.length, 0);
         if (totalLessons > 0) {
@@ -221,9 +218,9 @@ router.post('/:userId/courses/:courseId/lessons/:lessonId/toggle', authenticateT
 
     await user.save();
 
-    res.json({ 
-      message: 'Lesson completion toggled', 
-      isCompleted, 
+    res.json({
+      message: 'Lesson completion toggled',
+      isCompleted,
       completedLessonIds: courseProgress.completedLessonIds,
       progress: courseProgress.progress
     });

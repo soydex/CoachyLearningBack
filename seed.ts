@@ -1,8 +1,6 @@
 import "dotenv/config";
 import dbConnect from "./lib/db";
-import Organization from "./models/Organization";
 import User, { IUser } from "./models/User";
-import Capsule from "./models/Capsule";
 import Session from "./models/Session";
 import Course from "./models/Course";
 import Notification from "./models/Notification";
@@ -19,81 +17,67 @@ async function seedDatabase() {
     console.log("✅ Connected to MongoDB");
 
     // Clear existing data
-    await Organization.deleteMany({});
     await User.deleteMany({});
-    await Capsule.deleteMany({});
     await Session.deleteMany({});
     await Course.deleteMany({});
     await Notification.deleteMany({});
     await Quote.deleteMany({});
     console.log("🧹 Database cleared");
 
-    // Create organizations
-    const org1 = await Organization.create({
-      name: "Coach y Média",
-      settings: { theme: "default", language: "fr" },
-    });
-
-    const org2 = await Organization.create({
-      name: "Formation Plus",
-      settings: { theme: "dark", language: "fr" },
-    });
-
-    console.log("🏢 Organizations created");
-
     const hashedPassword = await bcrypt.hash("password123", 10);
     const hashedPassword2 = await bcrypt.hash("Tristan2", 10);
-    // Create users
+
+    // Create users with subscription
     const users: IUser[] = await User.create([
       {
-        organizationId: org2._id as any,
         email: "tristan.simon-derouard@comymedia.fr",
         name: "Tristan Simon-Derouard",
         role: "ADMIN",
         password: hashedPassword2,
+        subscription: { isActive: true, plan: "gifted", activatedAt: new Date() },
         stats: { sessionsCompleted: 0 },
       },
       {
-        organizationId: org1._id as any,
         email: "admin@coachymedia.fr",
         name: "Admin Principal",
         role: "ADMIN",
         password: hashedPassword,
+        subscription: { isActive: true, plan: "yearly", activatedAt: new Date() },
         stats: { sessionsCompleted: 0 },
       },
       {
-        organizationId: org1._id as any,
         email: "coach1@coachymedia.fr",
         name: "Marie Dupont",
         role: "COACH",
         password: hashedPassword,
+        subscription: { isActive: true, plan: "yearly", activatedAt: new Date() },
         coachProfile: { specialization: "Leadership", experience: 5 },
         stats: { sessionsCompleted: 15 },
       },
       {
-        organizationId: org1._id as any,
         email: "manager@coachymedia.fr",
         name: "Jean Martin",
         role: "MANAGER",
         password: hashedPassword,
+        subscription: { isActive: true, plan: "monthly", activatedAt: new Date() },
         stats: { sessionsCompleted: 8 },
       },
       {
-        organizationId: org2._id as any,
-        email: "coach2@formation-plus.com",
+        email: "coach2@coachymedia.fr",
         name: "Sophie Bernard",
         role: "COACH",
         password: hashedPassword,
+        subscription: { isActive: true, plan: "monthly", activatedAt: new Date() },
         coachProfile: { specialization: "Communication", experience: 3 },
         stats: { sessionsCompleted: 12 },
       },
       // Active Students
       {
-        organizationId: org1._id as any,
         email: "student1@coachymedia.fr",
         name: "Thomas Anderson",
         role: "USER",
         password: hashedPassword,
+        subscription: { isActive: true, plan: "monthly", activatedAt: new Date() },
         stats: { sessionsCompleted: 2 },
         coursesProgress: [
           {
@@ -106,11 +90,11 @@ async function seedDatabase() {
         ],
       },
       {
-        organizationId: org1._id as any,
         email: "student2@coachymedia.fr",
         name: "Sarah Connor",
         role: "USER",
         password: hashedPassword,
+        subscription: { isActive: true, plan: "yearly", activatedAt: new Date() },
         stats: { sessionsCompleted: 5 },
         coursesProgress: [
           {
@@ -122,12 +106,13 @@ async function seedDatabase() {
           },
         ],
       },
+      // Inactive subscription test user
       {
-        organizationId: org2._id as any,
-        email: "student3@formation-plus.com",
+        email: "inactive@coachymedia.fr",
         name: "Lucas Scott",
         role: "USER",
         password: hashedPassword,
+        subscription: { isActive: false, plan: "monthly", activatedAt: new Date() },
         stats: { sessionsCompleted: 0 },
         coursesProgress: [],
       },
@@ -801,49 +786,6 @@ async function seedDatabase() {
     ]);
     console.log("📚 Courses created");
 
-    // Create capsules
-    const capsules = await Capsule.create([
-      {
-        organizationId: org1._id as any,
-        name: "Capsule Leadership 2025",
-        totalHoursInitial: 40,
-        remainingHours: 32,
-        status: "ACTIVE",
-        expirationDate: new Date("2025-12-31"),
-        history: [
-          {
-            action: "DEBIT",
-            amount: 8,
-            date: new Date("2025-01-15"),
-            userId: users[0]._id as any,
-            reason: "Session de coaching individuel",
-          },
-        ],
-      },
-      {
-        organizationId: org2._id as any,
-        name: "Programme Communication",
-        totalHoursInitial: 60,
-        remainingHours: 45,
-        status: "ACTIVE",
-        expirationDate: new Date("2025-11-30"),
-        history: [
-          {
-            action: "DEBIT",
-            amount: 15,
-            date: new Date("2025-02-01"),
-            userId: users[3]._id as any,
-            reason: "Atelier groupe",
-          },
-        ],
-      },
-    ] as any[]);
-
-    const capsule1 = capsules[0];
-    const capsule2 = capsules[1];
-
-    console.log("📦 Capsules created");
-
     // Create sessions - including sessions for the last 7 days to populate the energy chart
     // Helper to create dates relative to today
     const today = new Date();
@@ -857,7 +799,6 @@ async function seedDatabase() {
     const sessions = await Session.create([
       // Historic session
       {
-        capsuleId: (capsule1._id as any),
         coachId: (users[1]._id as any),
         attendees: [(users[2]._id as any)],
         startTime: new Date("2025-01-20T10:00:00"),
@@ -879,7 +820,6 @@ async function seedDatabase() {
       },
       // Sessions for the last 7 days - For student1 (Thomas Anderson, users[4])
       {
-        capsuleId: (capsule1._id as any),
         coachId: (users[1]._id as any),
         attendees: [(users[4]._id as any)],
         startTime: getDateAgo(6, 10),
@@ -900,7 +840,6 @@ async function seedDatabase() {
         ],
       },
       {
-        capsuleId: (capsule1._id as any),
         coachId: (users[1]._id as any),
         attendees: [(users[4]._id as any)],
         startTime: getDateAgo(5, 14),
@@ -921,7 +860,6 @@ async function seedDatabase() {
         ],
       },
       {
-        capsuleId: (capsule1._id as any),
         coachId: (users[1]._id as any),
         attendees: [(users[4]._id as any)],
         startTime: getDateAgo(4, 9),
@@ -942,7 +880,6 @@ async function seedDatabase() {
         ],
       },
       {
-        capsuleId: (capsule1._id as any),
         coachId: (users[1]._id as any),
         attendees: [(users[4]._id as any)],
         startTime: getDateAgo(3, 11),
@@ -963,7 +900,6 @@ async function seedDatabase() {
         ],
       },
       {
-        capsuleId: (capsule1._id as any),
         coachId: (users[1]._id as any),
         attendees: [(users[4]._id as any)],
         startTime: getDateAgo(2, 10),
@@ -984,7 +920,6 @@ async function seedDatabase() {
         ],
       },
       {
-        capsuleId: (capsule1._id as any),
         coachId: (users[1]._id as any),
         attendees: [(users[4]._id as any)],
         startTime: getDateAgo(1, 15),
@@ -1005,7 +940,6 @@ async function seedDatabase() {
         ],
       },
       {
-        capsuleId: (capsule1._id as any),
         coachId: (users[1]._id as any),
         attendees: [(users[4]._id as any)],
         startTime: getDateAgo(0, 9),
@@ -1027,7 +961,6 @@ async function seedDatabase() {
       },
       // Scheduled session for the future
       {
-        capsuleId: (capsule2._id as any),
         coachId: (users[3]._id as any),
         attendees: [(users[0]._id as any), (users[1]._id as any)],
         startTime: new Date("2025-12-20T14:00:00"),
@@ -1067,10 +1000,8 @@ async function seedDatabase() {
 
     console.log("\n🎉 Database seeded successfully!");
     console.log("\n📊 Summary:");
-    console.log(`   Organizations: ${await Organization.countDocuments()}`);
     console.log(`   Users: ${await User.countDocuments()}`);
     console.log(`   Courses: ${await Course.countDocuments()}`);
-    console.log(`   Capsules: ${await Capsule.countDocuments()}`);
     console.log(`   Sessions: ${await Session.countDocuments()}`);
     console.log(`   Quotes: ${await Quote.countDocuments()}`);
 

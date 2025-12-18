@@ -1,9 +1,7 @@
 import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { Types } from "mongoose";
 import User, { IUser } from "../models/User";
-import Organization from "../models/Organization";
 import { z } from "zod";
 
 const router = express.Router();
@@ -20,7 +18,6 @@ const RegisterSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
   role: z.enum(["USER", "MANAGER", "COACH", "ADMIN"]).default("USER"),
-  organizationId: z.string().optional(),
 });
 
 // POST /api/auth/register
@@ -39,33 +36,17 @@ router.post("/register", async (req, res) => {
         });
     }
 
-    // Get organization (default to first one if not provided)
-    let organizationId: Types.ObjectId;
-    if (validatedData.organizationId) {
-      organizationId = new Types.ObjectId(validatedData.organizationId);
-    } else {
-      const org = await Organization.findOne();
-      if (!org) {
-        return res
-          .status(500)
-          .json({
-            error: "Erreur de configuration. Contactez l'administrateur.",
-          });
-      }
-      organizationId = org._id;
-    }
-
     // Hash password
     const hashedPassword = await bcrypt.hash(validatedData.password, 10);
 
-    // Create user
+    // Create user with default subscription
     const user = (await User.create([
       {
         name: validatedData.name,
         email: validatedData.email,
         password: hashedPassword,
         role: validatedData.role,
-        organizationId,
+        subscription: { isActive: true, plan: "monthly", activatedAt: new Date() },
         stats: { sessionsCompleted: 0 },
       },
     ] as any)) as IUser[];
@@ -77,7 +58,6 @@ router.post("/register", async (req, res) => {
       {
         userId: createdUser._id,
         role: createdUser.role,
-        organizationId: createdUser.organizationId,
       },
       JWT_SECRET,
       { expiresIn: "24h" }
@@ -90,7 +70,7 @@ router.post("/register", async (req, res) => {
         name: createdUser.name,
         email: createdUser.email,
         role: createdUser.role,
-        organizationId: createdUser.organizationId,
+        subscription: createdUser.subscription,
         coursesProgress: createdUser.coursesProgress,
       },
     });
@@ -147,7 +127,6 @@ router.post("/login", async (req, res) => {
       {
         userId: user._id,
         role: user.role,
-        organizationId: user.organizationId,
       },
       JWT_SECRET,
       { expiresIn: "24h" }
@@ -160,7 +139,8 @@ router.post("/login", async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        organizationId: user.organizationId,
+        subscription: user.subscription,
+        avatarUrl: user.avatarUrl,
         coursesProgress: user.coursesProgress,
       },
     });

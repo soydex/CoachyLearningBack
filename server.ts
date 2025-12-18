@@ -6,8 +6,6 @@ import dbConnect from './lib/db';
 
 // Import models to ensure they are registered with Mongoose
 import './models/User';
-import './models/Organization';
-import './models/Capsule';
 import './models/Session';
 import './models/Course';
 import './models/Notification';
@@ -16,8 +14,6 @@ import './models/Quote';
 // Import routes
 import authRoutes from './routes/auth';
 import userRoutes from './routes/users';
-import organizationRoutes from './routes/organizations';
-import capsuleRoutes from './routes/capsules';
 import sessionRoutes from './routes/sessions';
 import courseRoutes from './routes/courses';
 import notificationRoutes from './routes/notifications';
@@ -58,8 +54,6 @@ app.use(express.static('public'));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
-app.use('/api/organizations', organizationRoutes);
-app.use('/api/capsules', capsuleRoutes);
 app.use('/api/sessions', sessionRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/notifications', notificationRoutes);
@@ -81,10 +75,11 @@ app.get('/', (req, res) => {
     message: 'Coach y Média API',
     version: '1.0.0',
     endpoints: {
+      auth: '/api/auth',
       users: '/api/users',
-      organizations: '/api/organizations',
-      capsules: '/api/capsules',
+      courses: '/api/courses',
       sessions: '/api/sessions',
+      feedback: '/api/feedback',
       apiExplorer: '/api-explorer'
     }
   });

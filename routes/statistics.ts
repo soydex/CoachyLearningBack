@@ -1,4 +1,5 @@
 import { Router, type Response } from "express";
+import { Types } from "mongoose";
 import { z } from "zod";
 import { authenticateToken, type AuthRequest } from "../middleware/auth";
 import User from "../models/User";
@@ -19,16 +20,16 @@ const calculateUserStats = async (userId: string) => {
   if (!user) return null;
 
   const sessions = await Session.find({
-    attendees: userId,
+    attendees: new Types.ObjectId(userId),
     status: "COMPLETED",
-  }).populate("capsuleId");
+  } as any);
 
   // --- Calculate Total Learning Time ---
   const totalSessionMinutes = sessions.reduce((acc, session) => acc + session.duration, 0);
-  
+
   let totalCourseMinutes = 0;
   user.coursesProgress.forEach(cp => {
-      totalCourseMinutes += cp.completedLessonIds.length * 15;
+    totalCourseMinutes += cp.completedLessonIds.length * 15;
   });
 
   const totalMinutes = totalSessionMinutes + totalCourseMinutes;
@@ -38,8 +39,8 @@ const calculateUserStats = async (userId: string) => {
 
   // --- Calculate Completion Rate ---
   const totalProgress = user.coursesProgress.reduce((acc, cp) => acc + cp.progress, 0);
-  const completionRate = user.coursesProgress.length > 0 
-    ? Math.round(totalProgress / user.coursesProgress.length) 
+  const completionRate = user.coursesProgress.length > 0
+    ? Math.round(totalProgress / user.coursesProgress.length)
     : 0;
 
   return {
@@ -63,12 +64,10 @@ router.get("/team", authenticateToken, async (req: AuthRequest, res: Response) =
       return res.status(403).json({ error: "Forbidden" });
     }
 
-    // Find users in the same organization
-    // Optionally filter by those who report to this manager if that structure existed,
-    // but for now we'll take the whole organization or just "USER" role in the org.
+    // Find all users (except self and ADMINs)
     const teamMembers = await User.find({
-      organizationId: manager.organizationId,
-      _id: { $ne: manager._id } // Exclude self
+      _id: { $ne: manager._id },
+      role: { $in: ["USER", "COACH"] } // Only show students and coaches in team view
     });
 
     const teamStats = await Promise.all(teamMembers.map(async (member) => {
@@ -82,8 +81,8 @@ router.get("/team", authenticateToken, async (req: AuthRequest, res: Response) =
         role: member.role,
         learningTime: stats.learningTimeFormatted,
         completionRate: `${stats.completionRate}%`,
-        lastActive: member.coursesProgress.length > 0 
-          ? member.coursesProgress.sort((a, b) => b.lastAccess.getTime() - a.lastAccess.getTime())[0].lastAccess 
+        lastActive: member.coursesProgress.length > 0
+          ? member.coursesProgress.sort((a, b) => b.lastAccess.getTime() - a.lastAccess.getTime())[0].lastAccess
           : null
       };
     }));
@@ -124,7 +123,7 @@ router.get("/", authenticateToken, async (req: AuthRequest, res: Response) => {
       nextDay.setDate(date.getDate() + 1);
 
       // Filter sessions for this day
-      const daySessions = sessions.filter(s => 
+      const daySessions = sessions.filter(s =>
         s.startTime >= date && s.startTime < nextDay
       );
 
@@ -144,7 +143,7 @@ router.get("/", authenticateToken, async (req: AuthRequest, res: Response) => {
           assessmentCount++;
         }
       });
-      
+
       const avgEnergy = assessmentCount > 0 ? Math.round(totalEnergy / assessmentCount) : 0;
       const avgFocus = assessmentCount > 0 ? Math.round(totalFocus / assessmentCount) : 0;
 
@@ -159,10 +158,10 @@ router.get("/", authenticateToken, async (req: AuthRequest, res: Response) => {
     // --- Average Energy Level ---
     // Calculate average energy across all available data points
     const energyValues = dailyStats.filter(d => d.energy > 0).map(d => d.energy);
-    const avgEnergyTotal = energyValues.length > 0 
-      ? energyValues.reduce((a, b) => a + b, 0) / energyValues.length 
+    const avgEnergyTotal = energyValues.length > 0
+      ? energyValues.reduce((a, b) => a + b, 0) / energyValues.length
       : 0;
-    
+
     let energyLabel = "Moyenne";
     if (avgEnergyTotal >= 75) energyLabel = "Haute";
     else if (avgEnergyTotal >= 40) energyLabel = "Moyenne";

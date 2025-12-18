@@ -25,7 +25,6 @@ const AssessmentZod = z.object({
 
 // Main Session Schema
 const SessionSchema = new Schema({
-  capsuleId: { type: Schema.Types.ObjectId, ref: 'Capsule', required: true },
   coachId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   attendees: [{ type: Schema.Types.ObjectId, ref: 'User' }],
   startTime: { type: Date, required: true },
@@ -40,7 +39,6 @@ const SessionSchema = new Schema({
 
 // Zod validation for Session
 const SessionZod = z.object({
-  capsuleId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid ObjectId'),
   coachId: z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid ObjectId'),
   attendees: z.array(z.string().regex(/^[0-9a-fA-F]{24}$/, 'Invalid ObjectId')).default([]),
   startTime: z.date(),
@@ -63,7 +61,6 @@ export interface IAssessment {
 }
 
 export interface ISession extends Document {
-  capsuleId: Schema.Types.ObjectId;
   coachId: Schema.Types.ObjectId;
   attendees: Schema.Types.ObjectId[];
   startTime: Date;
