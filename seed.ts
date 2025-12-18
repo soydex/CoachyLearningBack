@@ -47,7 +47,7 @@ async function seedDatabase() {
     const users: IUser[] = await User.create([
       {
         organizationId: org1._id as any,
-        email: "admin@coachy-media.com",
+        email: "admin@coachymedia.fr",
         name: "Admin Principal",
         role: "ADMIN",
         password: hashedPassword,
@@ -55,7 +55,7 @@ async function seedDatabase() {
       },
       {
         organizationId: org1._id as any,
-        email: "coach1@coachy-media.com",
+        email: "coach1@coachymedia.fr",
         name: "Marie Dupont",
         role: "COACH",
         password: hashedPassword,
@@ -64,7 +64,7 @@ async function seedDatabase() {
       },
       {
         organizationId: org1._id as any,
-        email: "manager@coachy-media.com",
+        email: "manager@coachymedia.fr",
         name: "Jean Martin",
         role: "MANAGER",
         password: hashedPassword,
@@ -82,7 +82,7 @@ async function seedDatabase() {
       // Active Students
       {
         organizationId: org1._id as any,
-        email: "student1@coachy-media.com",
+        email: "student1@coachymedia.fr",
         name: "Thomas Anderson",
         role: "USER",
         password: hashedPassword,
@@ -99,7 +99,7 @@ async function seedDatabase() {
       },
       {
         organizationId: org1._id as any,
-        email: "student2@coachy-media.com",
+        email: "student2@coachymedia.fr",
         name: "Sarah Connor",
         role: "USER",
         password: hashedPassword,
