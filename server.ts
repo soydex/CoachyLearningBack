@@ -10,6 +10,7 @@ import './models/Session';
 import './models/Course';
 import './models/Notification';
 import './models/Quote';
+import './models/EnergyLog';
 
 // Import routes
 import authRoutes from './routes/auth';
@@ -23,6 +24,7 @@ import apiExplorerRoutes from './routes/api-explorer';
 import adminRoutes from './routes/admin';
 import uploadRoutes from './routes/upload';
 import quoteRoutes from './routes/quotes';
+import energyRoutes from './routes/energy';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -62,6 +64,7 @@ app.use('/api/feedback', feedbackRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/quotes', quoteRoutes);
+app.use('/api/energy-logs', energyRoutes);
 app.use('/api-explorer', apiExplorerRoutes);
 
 // Health check

@@ -5,6 +5,7 @@ import { authenticateToken, requireActiveSubscription, type AuthRequest } from "
 import User from "../models/User";
 import Session from "../models/Session";
 import Course from "../models/Course";
+import EnergyLog from "../models/EnergyLog";
 
 const router = Router();
 
@@ -107,7 +108,23 @@ router.get("/", authenticateToken, requireActiveSubscription, async (req: AuthRe
 
     const { user, sessions, learningTimeFormatted, completionRate } = stats;
 
-    // --- Calculate Daily Stats (Last 7 Days) ---
+    // --- Fetch mood logs for the last 7 days ---
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - 7);
+    startDate.setUTCHours(0, 0, 0, 0);
+
+    const moodLogs = await EnergyLog.find({
+      userId: new Types.ObjectId(userId),
+      date: { $gte: startDate },
+    } as any);
+
+    // Helper to check if two dates are the same day
+    const isSameDay = (d1: Date, d2: Date) =>
+      d1.getUTCFullYear() === d2.getUTCFullYear() &&
+      d1.getUTCMonth() === d2.getUTCMonth() &&
+      d1.getUTCDate() === d2.getUTCDate();
+
+    // Build array of last 7 days
     const today = new Date();
     const last7Days = Array.from({ length: 7 }, (_, i) => {
       const d = new Date();
@@ -116,7 +133,7 @@ router.get("/", authenticateToken, requireActiveSubscription, async (req: AuthRe
       return d;
     });
 
-    const dailyStats = last7Days.map(date => {
+    const dailyStats = last7Days.map((date: Date) => {
       const nextDay = new Date(date);
       nextDay.setDate(date.getDate() + 1);
 
@@ -125,36 +142,55 @@ router.get("/", authenticateToken, requireActiveSubscription, async (req: AuthRe
         s.startTime >= date && s.startTime < nextDay
       );
 
-      // Calculate Energy/Focus from Assessments
-      // We look for assessments where targetId is the user
-      let totalEnergy = 0;
-      let totalFocus = 0;
+      // Calculate session-based Energy/Focus from Assessments (legacy fallback)
+      let sessionEnergy = 0;
+      let sessionFocus = 0;
       let assessmentCount = 0;
 
       daySessions.forEach(session => {
         const userAssessment = session.assessments.find(a => a.targetId.toString() === userId.toString());
         if (userAssessment) {
-          // Proxy: Energy = (Leadership + Adaptability) / 2 * 10
-          // Proxy: Focus = (Communication + EmotionalInt) / 2 * 10
-          totalEnergy += ((userAssessment.leadership + userAssessment.adaptability) / 2) * 10;
-          totalFocus += ((userAssessment.communication + userAssessment.emotionalInt) / 2) * 10;
+          sessionEnergy += ((userAssessment.leadership + userAssessment.adaptability) / 2) * 10;
+          sessionFocus += ((userAssessment.communication + userAssessment.emotionalInt) / 2) * 10;
           assessmentCount++;
         }
       });
 
-      const avgEnergy = assessmentCount > 0 ? Math.round(totalEnergy / assessmentCount) : 0;
-      const avgFocus = assessmentCount > 0 ? Math.round(totalFocus / assessmentCount) : 0;
+      const avgSessionEnergy = assessmentCount > 0 ? Math.round(sessionEnergy / assessmentCount) : 0;
+      const avgSessionFocus = assessmentCount > 0 ? Math.round(sessionFocus / assessmentCount) : 0;
+
+      // --- Priority-based energy calculation ---
+      // 1. Mood log (if submitted that day)
+      // 2. Activity-based (lessons completed that day)
+      // 3. Session assessments (legacy)
+      // 4. Default to 0
+      let energy = 0;
+      let focus = 0;
+
+      // Check for mood log this day
+      const dayMoodLog = moodLogs.find(log => isSameDay(log.date, date));
+
+      if (dayMoodLog) {
+        // Mood: 1=Low(33), 2=Medium(66), 3=High(100)
+        energy = dayMoodLog.mood * 33;
+      } else if (avgSessionEnergy > 0) {
+        // Use session assessment if available
+        energy = avgSessionEnergy;
+      }
+      // Note: We could add activity-based calculation here in the future
+
+      // Focus from sessions or activity
+      focus = avgSessionFocus > 0 ? avgSessionFocus : Math.min(100, daySessions.length * 25);
 
       return {
         name: getDayName(date),
-        energy: avgEnergy, // 0-100
-        focus: avgFocus,   // 0-100
+        energy: Math.min(100, energy), // 0-100
+        focus: Math.min(100, focus),   // 0-100
         date: date.toISOString()
       };
     });
 
     // --- Average Energy Level ---
-    // Calculate average energy across all available data points
     const energyValues = dailyStats.filter(d => d.energy > 0).map(d => d.energy);
     const avgEnergyTotal = energyValues.length > 0
       ? energyValues.reduce((a, b) => a + b, 0) / energyValues.length
