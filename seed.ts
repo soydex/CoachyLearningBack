@@ -760,7 +760,7 @@ async function seedDatabase() {
             title: "Les fondements du leadership",
             lessons: [
               {
-                id: "l2-1",
+                id: "l2-1-b",
                 title: "Styles de leadership",
                 type: "LESSON",
                 duration: "10 min",
