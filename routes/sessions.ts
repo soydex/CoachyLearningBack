@@ -1,10 +1,11 @@
-import express from 'express';
+import express, { Response } from 'express';
 import Session, { SessionZod, AssessmentZod } from '../models/Session';
+import { authenticateToken, requireActiveSubscription, AuthRequest } from '../middleware/auth';
 
 const router = express.Router();
 
 // GET /api/sessions - Get all sessions
-router.get('/', async (req, res) => {
+router.get('/', authenticateToken, requireActiveSubscription, async (req: AuthRequest, res: Response) => {
   try {
     const { page = 1, limit = 10, capsuleId, coachId, status } = req.query;
 
@@ -40,7 +41,7 @@ router.get('/', async (req, res) => {
 });
 
 // GET /api/sessions/:id - Get session by ID
-router.get('/:id', async (req, res) => {
+router.get('/:id', authenticateToken, requireActiveSubscription, async (req: AuthRequest, res: Response) => {
   try {
     const session = await Session.findById(req.params.id)
       .populate('capsuleId', 'name')
@@ -58,7 +59,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST /api/sessions - Create new session
-router.post('/', async (req, res) => {
+router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const validatedData = SessionZod.parse(req.body);
     const session = new Session(validatedData);
@@ -76,7 +77,7 @@ router.post('/', async (req, res) => {
 });
 
 // PUT /api/sessions/:id - Update session
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const validatedData = SessionZod.partial().parse(req.body);
     const session = await Session.findByIdAndUpdate(
@@ -84,8 +85,8 @@ router.put('/:id', async (req, res) => {
       validatedData,
       { new: true, runValidators: true }
     ).populate('capsuleId', 'name')
-     .populate('coachId', 'name email')
-     .populate('attendees', 'name email');
+      .populate('coachId', 'name email')
+      .populate('attendees', 'name email');
 
     if (!session) {
       return res.status(404).json({ error: 'Session not found' });
@@ -101,7 +102,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // DELETE /api/sessions/:id - Delete session
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const session = await Session.findByIdAndDelete(req.params.id);
     if (!session) {
@@ -114,7 +115,7 @@ router.delete('/:id', async (req, res) => {
 });
 
 // POST /api/sessions/:id/assessments - Add assessment to session
-router.post('/:id/assessments', async (req, res) => {
+router.post('/:id/assessments', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const validatedAssessment = AssessmentZod.parse(req.body);
 
@@ -141,7 +142,7 @@ router.post('/:id/assessments', async (req, res) => {
 });
 
 // GET /api/sessions/stats/overview - Get sessions statistics
-router.get('/stats/overview', async (req, res) => {
+router.get('/stats/overview', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const totalSessions = await Session.countDocuments();
     const completedSessions = await Session.countDocuments({ status: 'COMPLETED' });

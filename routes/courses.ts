@@ -2,7 +2,7 @@ import express from 'express';
 import Course from '../models/Course';
 import User from '../models/User';
 import Feedback from '../models/Feedback';
-import { authenticateToken, requireRole, AuthRequest } from '../middleware/auth';
+import { authenticateToken, requireRole, requireActiveSubscription, AuthRequest } from '../middleware/auth';
 import { v4 as uuidv4 } from 'uuid'; // Assuming uuid is available or I'll use a helper
 
 const router = express.Router();
@@ -21,7 +21,7 @@ router.get('/', async (req, res) => {
 });
 
 // GET /api/courses/:id - Get course by ID
-router.get('/:id', async (req, res) => {
+router.get('/:id', authenticateToken, requireActiveSubscription, async (req: any, res) => {
   try {
     const course = await Course.findOne({ id: req.params.id });
     if (!course) {
@@ -127,7 +127,7 @@ router.post('/:id/modules/:moduleId/lessons', authenticateToken, requireRole(['C
 });
 
 // POST /api/courses/:id/lessons/:lessonId/complete - Mark a lesson as complete or incomplete
-router.post('/:id/lessons/:lessonId/complete', authenticateToken, async (req: any, res) => {
+router.post('/:id/lessons/:lessonId/complete', authenticateToken, requireActiveSubscription, async (req: any, res) => {
   try {
     const courseId = req.params.id;
     const lessonId = req.params.lessonId;
@@ -392,7 +392,7 @@ router.delete('/:id/modules/:moduleId/lessons/:lessonId', authenticateToken, req
 });
 
 // POST /api/courses/:id/progress - Update course progress
-router.post('/:id/progress', authenticateToken, async (req: AuthRequest, res) => {
+router.post('/:id/progress', authenticateToken, requireActiveSubscription, async (req: AuthRequest, res) => {
   try {
     const { lessonId, isCompleted } = req.body;
     const userId = req.user?.userId;
@@ -451,7 +451,7 @@ router.post('/:id/progress', authenticateToken, async (req: AuthRequest, res) =>
 });
 
 // POST /api/courses/:id/lessons/:lessonId/quiz/submit - Submit quiz answers
-router.post('/:id/lessons/:lessonId/quiz/submit', authenticateToken, async (req: AuthRequest, res) => {
+router.post('/:id/lessons/:lessonId/quiz/submit', authenticateToken, requireActiveSubscription, async (req: AuthRequest, res) => {
   try {
     const { answers } = req.body; // Object with questionId: answerIndex
     const userId = req.user?.userId;
@@ -539,7 +539,7 @@ router.post('/:id/lessons/:lessonId/quiz/submit', authenticateToken, async (req:
 });
 
 // GET /api/courses/:id/certificate - Get course certificate
-router.get('/:id/certificate', authenticateToken, async (req: AuthRequest, res) => {
+router.get('/:id/certificate', authenticateToken, requireActiveSubscription, async (req: AuthRequest, res) => {
   try {
     const userId = req.user?.userId;
     const courseId = req.params.id;

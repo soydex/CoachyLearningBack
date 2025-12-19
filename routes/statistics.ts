@@ -1,7 +1,7 @@
 import { Router, type Response } from "express";
 import { Types } from "mongoose";
 import { z } from "zod";
-import { authenticateToken, type AuthRequest } from "../middleware/auth";
+import { authenticateToken, requireActiveSubscription, type AuthRequest } from "../middleware/auth";
 import User from "../models/User";
 import Session from "../models/Session";
 import Course from "../models/Course";
@@ -81,9 +81,7 @@ router.get("/team", authenticateToken, async (req: AuthRequest, res: Response) =
         role: member.role,
         learningTime: stats.learningTimeFormatted,
         completionRate: `${stats.completionRate}%`,
-        lastActive: member.coursesProgress.length > 0
-          ? member.coursesProgress.sort((a, b) => b.lastAccess.getTime() - a.lastAccess.getTime())[0].lastAccess
-          : null
+        lastActive: member.lastActive,
       };
     }));
 
@@ -95,7 +93,7 @@ router.get("/team", authenticateToken, async (req: AuthRequest, res: Response) =
   }
 });
 
-router.get("/", authenticateToken, async (req: AuthRequest, res: Response) => {
+router.get("/", authenticateToken, requireActiveSubscription, async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user?.userId;
     if (!userId) {

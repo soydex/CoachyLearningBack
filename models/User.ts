@@ -70,6 +70,8 @@ const UserSchema = new Schema(
     stats: { type: UserStatsSchema, default: {} },
     // Course Progress
     coursesProgress: { type: [CourseProgressSchema], default: [] },
+    // Last Activity
+    lastActive: { type: Date, default: Date.now },
   },
   {
     timestamps: true,
@@ -121,6 +123,7 @@ export interface IUser extends Document {
   coachProfile: any;
   stats: IUserStats;
   coursesProgress: ICourseProgress[];
+  lastActive: Date;
   createdAt: Date;
   updatedAt: Date;
 }

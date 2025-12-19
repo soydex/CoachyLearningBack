@@ -132,6 +132,10 @@ router.post("/login", async (req, res) => {
       { expiresIn: "24h" }
     );
 
+    // Update lastActive
+    user.lastActive = new Date();
+    await user.save();
+
     res.json({
       token,
       user: {
@@ -155,6 +159,28 @@ router.post("/login", async (req, res) => {
     res
       .status(500)
       .json({ error: "Erreur lors de la connexion. Veuillez réessayer." });
+  }
+});
+
+// GET /api/auth/me
+router.get("/me", authenticateToken, async (req: any, res) => {
+  try {
+    const user = await User.findById(req.user.userId).select("-password -legacyWPHash");
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    res.json({
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      subscription: user.subscription,
+      avatarUrl: user.avatarUrl,
+      coursesProgress: user.coursesProgress,
+    });
+  } catch (error) {
+    console.error("Fetch me error:", error);
+    res.status(500).json({ error: "Failed to fetch user data" });
   }
 });
 

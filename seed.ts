@@ -36,6 +36,7 @@ async function seedDatabase() {
         password: hashedPassword2,
         subscription: { isActive: true, plan: "gifted", activatedAt: new Date() },
         stats: { sessionsCompleted: 0 },
+        lastActive: new Date(),
       },
       {
         email: "admin@coachymedia.fr",
@@ -44,6 +45,7 @@ async function seedDatabase() {
         password: hashedPassword,
         subscription: { isActive: true, plan: "yearly", activatedAt: new Date() },
         stats: { sessionsCompleted: 0 },
+        lastActive: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
       },
       {
         email: "coach1@coachymedia.fr",
@@ -79,12 +81,13 @@ async function seedDatabase() {
         password: hashedPassword,
         subscription: { isActive: true, plan: "monthly", activatedAt: new Date() },
         stats: { sessionsCompleted: 2 },
+        lastActive: new Date(),
         coursesProgress: [
           {
             courseId: "c1",
-            completedLessonIds: ["l1", "l2", "c1", "c2"],
-            progress: 45,
-            score: 85,
+            completedLessonIds: [],
+            progress: 0,
+            score: 0,
             lastAccess: new Date(),
           },
         ],
@@ -96,10 +99,18 @@ async function seedDatabase() {
         password: hashedPassword,
         subscription: { isActive: true, plan: "yearly", activatedAt: new Date() },
         stats: { sessionsCompleted: 5 },
+        lastActive: new Date(),
         coursesProgress: [
           {
             courseId: "c1",
-            completedLessonIds: ["l1", "l2", "c1", "c2", "c3", "q1"],
+            completedLessonIds: [
+              "l0-1", "l1-1", "l1-2", "q1",
+              "l2-1", "l2-2", "q2",
+              "l3-1", "l3-2", "l3-3", "q3",
+              "l4-1", "l4-2", "q4",
+              "l5-1", "l5-2", "q5",
+              "l6-1", "l6-2", "q6"
+            ],
             progress: 100,
             score: 95,
             lastAccess: new Date(),

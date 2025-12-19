@@ -1,5 +1,8 @@
 import express from 'express';
 import User, { UserZod } from '../models/User';
+import Feedback from '../models/Feedback';
+import Notification from '../models/Notification';
+import Session from '../models/Session';
 import { authenticateToken, AuthRequest } from '../middleware/auth';
 
 const router = express.Router();
@@ -88,14 +91,56 @@ router.put('/:id', async (req, res) => {
 });
 
 // DELETE /api/users/:id - Delete user
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateToken, async (req: AuthRequest, res) => {
   try {
-    const user = await User.findByIdAndDelete(req.params.id);
+    const userId = req.params.id;
+
+    // Check permissions (self or admin)
+    if (req.user?.userId !== userId && req.user?.role !== 'ADMIN') {
+      return res.status(403).json({ error: 'Unauthorized to delete this user' });
+    }
+
+    // 1. Delete all feedback left by user
+    await Feedback.deleteMany({ userId });
+
+    // 2. Delete all notifications for this user
+    await Notification.deleteMany({ userId });
+
+    // 3. Remove from session attendees
+    await Session.updateMany(
+      { attendees: userId },
+      { $pull: { attendees: userId } }
+    );
+
+    // 4. Remove assessments involving this user (as rater or target)
+    await Session.updateMany(
+      {
+        $or: [
+          { 'assessments.raterId': userId },
+          { 'assessments.targetId': userId }
+        ]
+      },
+      {
+        $pull: {
+          assessments: {
+            $or: [
+              { raterId: userId },
+              { targetId: userId }
+            ]
+          }
+        }
+      }
+    );
+
+    // 5. Final user deletion
+    const user = await User.findByIdAndDelete(userId);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-    res.json({ message: 'User deleted successfully' });
+
+    res.json({ message: 'User and all associated data deleted successfully' });
   } catch (error) {
+    console.error('Delete user error:', error);
     res.status(500).json({ error: 'Failed to delete user' });
   }
 });
