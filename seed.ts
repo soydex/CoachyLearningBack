@@ -137,26 +137,29 @@ async function seedDatabase() {
         id: "n1",
         title: "Nouveau contenu disponible",
         message: 'Le module "Gestion des émotions" est maintenant accessible.',
-        date: "Il y a 2 heures",
+        date: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
         isRead: false,
         type: "success",
+        readBy: [],
       },
       {
         id: "n2",
         title: "Rappel : Quiz à terminer",
         message:
           'N\'oubliez pas de compléter le quiz "Planifier prioriser" avant demain soir.',
-        date: "Il y a 5 heures",
+        date: new Date(Date.now() - 5 * 60 * 60 * 1000), // 5 hours ago
         isRead: false,
         type: "alert",
+        readBy: [],
       },
       {
         id: "n3",
         title: "Bienvenue sur Coachymédia",
         message: "Commencez votre parcours d'apprentissage dès aujourd'hui !",
-        date: "Il y a 2 jours",
+        date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
         isRead: true,
         type: "info",
+        readBy: [],
       },
     ]);
     console.log("🔔 Notifications created");
