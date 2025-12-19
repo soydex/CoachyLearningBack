@@ -5,7 +5,12 @@ import User, { IUser } from "../models/User";
 import { z } from "zod";
 
 const router = express.Router();
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
+
+// SECURITY: Crash immediately if JWT_SECRET is not set
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  throw new Error('FATAL: JWT_SECRET environment variable is not set.');
+}
 
 // Validation schemas
 const LoginSchema = z.object({
@@ -14,10 +19,10 @@ const LoginSchema = z.object({
 });
 
 const RegisterSchema = z.object({
-  name: z.string().min(2),
+  name: z.string().min(2).max(100),
   email: z.string().email(),
-  password: z.string().min(6),
-  role: z.enum(["USER", "MANAGER", "COACH", "ADMIN"]).default("USER"),
+  password: z.string().min(8).max(128), // SECURITY: Min 8 for strength, max 128 to prevent bcrypt DoS
+  // SECURITY: role removed - users cannot self-assign roles, always defaults to USER
 });
 
 // POST /api/auth/register
@@ -39,13 +44,13 @@ router.post("/register", async (req, res) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(validatedData.password, 10);
 
-    // Create user with default subscription
+    // Create user with default subscription - SECURITY: role is ALWAYS USER for self-registration
     const user = (await User.create([
       {
         name: validatedData.name,
         email: validatedData.email,
         password: hashedPassword,
-        role: validatedData.role,
+        role: "USER", // SECURITY: Never accept role from client
         subscription: { isActive: true, plan: "monthly", activatedAt: new Date() },
         stats: { sessionsCompleted: 0 },
       },
@@ -97,29 +102,25 @@ router.post("/login", async (req, res) => {
   try {
     const validatedData = LoginSchema.parse(req.body);
 
+    // SECURITY: Generic error message to prevent user enumeration
+    const genericError = "Email ou mot de passe incorrect.";
+
+    // Fake hash for timing attack prevention when user doesn't exist
+    const fakeHash = "$2a$10$N9qo8uLOickgx2ZMRZoMye.IjqQBrkHx3Esg5ZwKQoXsJP8UtKWXC";
+
     // Find user
     const user = await User.findOne({ email: validatedData.email });
-    if (!user) {
-      return res
-        .status(401)
-        .json({ error: "Aucun compte trouvé avec cet email." });
-    }
 
-    if (!user.password) {
-      return res
-        .status(401)
-        .json({
-          error: "Ce compte utilise une méthode de connexion différente.",
-        });
-    }
-
-    // Verify password
+    // SECURITY: Always do bcrypt compare to prevent timing attacks
+    const passwordToCompare = user?.password || fakeHash;
     const isValidPassword = await bcrypt.compare(
       validatedData.password,
-      user.password
+      passwordToCompare
     );
-    if (!isValidPassword) {
-      return res.status(401).json({ error: "Mot de passe incorrect." });
+
+    // Check if user exists and password is valid
+    if (!user || !user.password || !isValidPassword) {
+      return res.status(401).json({ error: genericError });
     }
 
     // Generate token

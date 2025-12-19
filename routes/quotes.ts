@@ -1,10 +1,11 @@
 import express from "express";
 import Quote from "../models/Quote";
+import { authenticateToken, requireRole, requireActiveSubscription, AuthRequest } from "../middleware/auth";
 
 const router = express.Router();
 
-// Get all quotes
-router.get("/", async (req, res) => {
+// Get all quotes (requires active subscription)
+router.get("/", authenticateToken, requireActiveSubscription, async (req: any, res) => {
   try {
     const quotes = await Quote.find().sort({ _id: -1 });
     res.json(quotes);
@@ -13,8 +14,8 @@ router.get("/", async (req, res) => {
   }
 });
 
-// Get a random quote
-router.get("/random", async (req, res) => {
+// Get a random quote (requires active subscription)
+router.get("/random", authenticateToken, requireActiveSubscription, async (req: any, res) => {
   try {
     const count = await Quote.countDocuments();
     const random = Math.floor(Math.random() * count);
@@ -30,8 +31,8 @@ router.get("/random", async (req, res) => {
   }
 });
 
-// Create a new quote
-router.post("/", async (req, res) => {
+// Create a new quote (ADMIN only)
+router.post("/", authenticateToken, requireRole(['ADMIN']), async (req, res) => {
   try {
     const { text, author } = req.body;
     if (!text || !author) {
@@ -45,8 +46,8 @@ router.post("/", async (req, res) => {
   }
 });
 
-// Update a quote
-router.put("/:id", async (req, res) => {
+// Update a quote (ADMIN only)
+router.put("/:id", authenticateToken, requireRole(['ADMIN']), async (req, res) => {
   try {
     const { text, author } = req.body;
     const quote = await Quote.findByIdAndUpdate(
@@ -63,8 +64,8 @@ router.put("/:id", async (req, res) => {
   }
 });
 
-// Delete a quote
-router.delete("/:id", async (req, res) => {
+// Delete a quote (ADMIN only)
+router.delete("/:id", authenticateToken, requireRole(['ADMIN']), async (req, res) => {
   try {
     const quote = await Quote.findByIdAndDelete(req.params.id);
     if (!quote) {
@@ -76,8 +77,14 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-// Seed initial quotes (internal use or one-time setup)
-router.post("/seed", async (req, res) => {
+// Seed initial quotes (ADMIN only - internal use)
+// SECURITY: Disable in production or remove entirely
+router.post("/seed", authenticateToken, requireRole(['ADMIN']), async (req, res) => {
+  // Block in production
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(403).json({ message: "Seed endpoint disabled in production" });
+  }
+
   try {
     const quotes = [
       {

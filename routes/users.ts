@@ -7,15 +7,24 @@ import { authenticateToken, AuthRequest } from '../middleware/auth';
 
 const router = express.Router();
 
-// GET /api/users - Get all users
-router.get('/', async (req, res) => {
+// GET /api/users - Get all users (ADMIN only)
+router.get('/', authenticateToken, async (req: AuthRequest, res) => {
   try {
+    // Only ADMIN can list all users
+    if (req.user?.role !== 'ADMIN') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
     const { page = 1, limit = 10, role } = req.query;
 
     const query: any = {};
-    if (role) query.role = role;
+    // Validate role is a valid string before using in query
+    if (role && typeof role === 'string' && ['USER', 'MANAGER', 'COACH', 'ADMIN'].includes(role)) {
+      query.role = role;
+    }
 
     const users = await User.find(query)
+      .select('-password -legacyWPHash') // SECURITY: Never expose password hashes
       .limit(Number(limit) * 1)
       .skip((Number(page) - 1) * Number(limit))
       .sort({ createdAt: -1 });
@@ -36,10 +45,16 @@ router.get('/', async (req, res) => {
   }
 });
 
-// GET /api/users/:id - Get user by ID
-router.get('/:id', async (req, res) => {
+// GET /api/users/:id - Get user by ID (self or ADMIN)
+router.get('/:id', authenticateToken, async (req: AuthRequest, res) => {
   try {
-    const user = await User.findById(req.params.id);
+    // Users can only view their own profile, unless they are ADMIN
+    if (req.user?.userId !== req.params.id && req.user?.role !== 'ADMIN') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    const user = await User.findById(req.params.id)
+      .select('-password -legacyWPHash'); // SECURITY: Never expose password hashes
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
@@ -49,13 +64,24 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// POST /api/users - Create new user
-router.post('/', async (req, res) => {
+// POST /api/users - Create new user (ADMIN only - use /auth/register for self-registration)
+router.post('/', authenticateToken, async (req: AuthRequest, res) => {
   try {
+    // Only ADMIN can create users directly
+    if (req.user?.role !== 'ADMIN') {
+      return res.status(403).json({ error: 'Admin access required. Use /api/auth/register for self-registration.' });
+    }
+
     const validatedData = UserZod.parse(req.body);
     const user = new User(validatedData);
     await user.save();
-    res.status(201).json(user);
+
+    // Return user without sensitive fields
+    const userResponse = user.toObject();
+    delete userResponse.password;
+    delete userResponse.legacyWPHash;
+
+    res.status(201).json(userResponse);
   } catch (error: any) {
     if (error.name === 'ZodError') {
       return res.status(400).json({ error: 'Validation error', details: error.errors });
@@ -67,15 +93,26 @@ router.post('/', async (req, res) => {
   }
 });
 
-// PUT /api/users/:id - Update user
-router.put('/:id', async (req, res) => {
+// PUT /api/users/:id - Update user (self or ADMIN)
+router.put('/:id', authenticateToken, async (req: AuthRequest, res) => {
   try {
-    const validatedData = UserZod.partial().parse(req.body);
+    // Users can only update their own profile, unless they are ADMIN
+    if (req.user?.userId !== req.params.id && req.user?.role !== 'ADMIN') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    // SECURITY: Prevent non-admins from escalating privileges
+    const updateData = UserZod.partial().parse(req.body);
+    if (req.user?.role !== 'ADMIN') {
+      delete (updateData as any).role; // Only admins can change roles
+      delete (updateData as any).subscription; // Only admins can change subscription
+    }
+
     const user = await User.findByIdAndUpdate(
       req.params.id,
-      validatedData,
+      updateData,
       { new: true, runValidators: true }
-    );
+    ).select('-password -legacyWPHash');
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
@@ -145,8 +182,13 @@ router.delete('/:id', authenticateToken, async (req: AuthRequest, res) => {
   }
 });
 
-// GET /api/users/stats/overview - Get users statistics
-router.get('/stats/overview', async (req, res) => {
+// GET /api/users/stats/overview - Get users statistics (ADMIN only)
+router.get('/stats/overview', authenticateToken, async (req: AuthRequest, res) => {
+  // SECURITY: Only ADMIN can view user statistics
+  if (req.user?.role !== 'ADMIN') {
+    return res.status(403).json({ error: 'Admin access required' });
+  }
+
   try {
     const totalUsers = await User.countDocuments();
     const usersByRole = await User.aggregate([
@@ -276,5 +318,46 @@ router.post('/:userId/courses/:courseId/lessons/:lessonId/toggle', authenticateT
   }
 });
 
+// GET /api/users/:id/export - RGPD: Export all personal data
+router.get('/:id/export', authenticateToken, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.params.id;
+
+    // Users can only export their own data, unless they are ADMIN
+    if (req.user?.userId !== userId && req.user?.role !== 'ADMIN') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    const user = await User.findById(userId).select('-password -legacyWPHash');
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Collect all user-related data
+    const feedback = await Feedback.find({ userId });
+    const notifications = await Notification.find({ userId });
+    const sessions = await Session.find({ attendees: userId });
+
+    const exportData = {
+      exportDate: new Date().toISOString(),
+      userData: user.toObject(),
+      feedback,
+      notifications,
+      sessionsAttended: sessions.map(s => ({
+        id: s._id,
+        startTime: s.startTime,
+        duration: s.duration,
+        status: s.status
+      }))
+    };
+
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename="user-data-export-${userId}.json"`);
+    res.json(exportData);
+  } catch (error) {
+    console.error('RGPD export error:', error);
+    res.status(500).json({ error: 'Failed to export data' });
+  }
+});
 
 export default router;

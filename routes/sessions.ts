@@ -1,8 +1,15 @@
 import express, { Response } from 'express';
 import Session, { SessionZod, AssessmentZod } from '../models/Session';
-import { authenticateToken, requireActiveSubscription, AuthRequest } from '../middleware/auth';
+import { authenticateToken, requireActiveSubscription, requireRole, AuthRequest } from '../middleware/auth';
 
 const router = express.Router();
+
+// Helper to check if user can modify a session
+const canModifySession = (session: any, userId: string, role: string): boolean => {
+  if (role === 'ADMIN') return true;
+  if (session.coachId?.toString() === userId) return true;
+  return false;
+};
 
 // GET /api/sessions - Get all sessions
 router.get('/', authenticateToken, requireActiveSubscription, async (req: AuthRequest, res: Response) => {
@@ -58,10 +65,16 @@ router.get('/:id', authenticateToken, requireActiveSubscription, async (req: Aut
   }
 });
 
-// POST /api/sessions - Create new session
-router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
+// POST /api/sessions - Create new session (COACH/ADMIN only)
+router.post('/', authenticateToken, requireRole(['COACH', 'ADMIN']), async (req: AuthRequest, res: Response) => {
   try {
     const validatedData = SessionZod.parse(req.body);
+
+    // SECURITY: If not admin, force coachId to be the current user
+    if (req.user?.role !== 'ADMIN') {
+      (validatedData as any).coachId = req.user?.userId;
+    }
+
     const session = new Session(validatedData);
     await session.save();
     await session.populate('capsuleId', 'name');
@@ -76,10 +89,26 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
   }
 });
 
-// PUT /api/sessions/:id - Update session
+// PUT /api/sessions/:id - Update session (owner or ADMIN only)
 router.put('/:id', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
+    // SECURITY: Check ownership before update
+    const existingSession = await Session.findById(req.params.id);
+    if (!existingSession) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    if (!canModifySession(existingSession, req.user?.userId || '', req.user?.role || '')) {
+      return res.status(403).json({ error: 'Access denied. Only session coach or admin can modify.' });
+    }
+
     const validatedData = SessionZod.partial().parse(req.body);
+
+    // SECURITY: Prevent non-admins from changing coachId to someone else
+    if (req.user?.role !== 'ADMIN' && (validatedData as any).coachId) {
+      delete (validatedData as any).coachId;
+    }
+
     const session = await Session.findByIdAndUpdate(
       req.params.id,
       validatedData,
@@ -87,10 +116,6 @@ router.put('/:id', authenticateToken, async (req: AuthRequest, res: Response) =>
     ).populate('capsuleId', 'name')
       .populate('coachId', 'name email')
       .populate('attendees', 'name email');
-
-    if (!session) {
-      return res.status(404).json({ error: 'Session not found' });
-    }
 
     res.json(session);
   } catch (error: any) {
@@ -101,20 +126,27 @@ router.put('/:id', authenticateToken, async (req: AuthRequest, res: Response) =>
   }
 });
 
-// DELETE /api/sessions/:id - Delete session
+// DELETE /api/sessions/:id - Delete session (owner or ADMIN only)
 router.delete('/:id', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    const session = await Session.findByIdAndDelete(req.params.id);
+    // SECURITY: Check ownership before delete
+    const session = await Session.findById(req.params.id);
     if (!session) {
       return res.status(404).json({ error: 'Session not found' });
     }
+
+    if (!canModifySession(session, req.user?.userId || '', req.user?.role || '')) {
+      return res.status(403).json({ error: 'Access denied. Only session coach or admin can delete.' });
+    }
+
+    await Session.findByIdAndDelete(req.params.id);
     res.json({ message: 'Session deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete session' });
   }
 });
 
-// POST /api/sessions/:id/assessments - Add assessment to session
+// POST /api/sessions/:id/assessments - Add assessment to session (attendees/coach only)
 router.post('/:id/assessments', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
     const validatedAssessment = AssessmentZod.parse(req.body);
@@ -124,7 +156,17 @@ router.post('/:id/assessments', authenticateToken, async (req: AuthRequest, res:
       return res.status(404).json({ error: 'Session not found' });
     }
 
-    session.assessments.push(validatedAssessment);
+    // SECURITY: Only session attendees, coach, or admin can add assessments
+    const userId = req.user?.userId;
+    const isAttendee = session.attendees.some((a: any) => a.toString() === userId);
+    const isCoach = session.coachId?.toString() === userId;
+    const isAdmin = req.user?.role === 'ADMIN';
+
+    if (!isAttendee && !isCoach && !isAdmin) {
+      return res.status(403).json({ error: 'Only session participants can add assessments' });
+    }
+
+    session.assessments.push(validatedAssessment as any);
     await session.save();
     await session.populate('capsuleId', 'name');
     await session.populate('coachId', 'name email');
@@ -141,8 +183,8 @@ router.post('/:id/assessments', authenticateToken, async (req: AuthRequest, res:
   }
 });
 
-// GET /api/sessions/stats/overview - Get sessions statistics
-router.get('/stats/overview', authenticateToken, async (req: AuthRequest, res: Response) => {
+// GET /api/sessions/stats/overview - Get sessions statistics (MANAGER/COACH/ADMIN only)
+router.get('/stats/overview', authenticateToken, requireRole(['MANAGER', 'COACH', 'ADMIN']), async (req: AuthRequest, res: Response) => {
   try {
     const totalSessions = await Session.countDocuments();
     const completedSessions = await Session.countDocuments({ status: 'COMPLETED' });

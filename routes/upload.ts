@@ -6,6 +6,52 @@ import User from '../models/User';
 
 const router = express.Router();
 
+// SECURITY: File size limits in bytes
+const MAX_VIDEO_SIZE = 100 * 1024 * 1024; // 100MB
+const MAX_AVATAR_SIZE = 5 * 1024 * 1024; // 5MB  
+const MAX_DOCUMENT_SIZE = 50 * 1024 * 1024; // 50MB
+
+// SECURITY: Magic bytes for file type validation
+const MAGIC_BYTES: { [key: string]: number[][] } = {
+  // Videos
+  '.mp4': [[0x00, 0x00, 0x00], [0x66, 0x74, 0x79, 0x70]], // ftyp at offset 4
+  '.webm': [[0x1A, 0x45, 0xDF, 0xA3]],
+  '.mov': [[0x00, 0x00, 0x00]], // Similar to mp4
+  '.avi': [[0x52, 0x49, 0x46, 0x46]], // RIFF
+  '.mkv': [[0x1A, 0x45, 0xDF, 0xA3]],
+  // Images
+  '.jpg': [[0xFF, 0xD8, 0xFF]],
+  '.jpeg': [[0xFF, 0xD8, 0xFF]],
+  '.png': [[0x89, 0x50, 0x4E, 0x47]],
+  '.gif': [[0x47, 0x49, 0x46]],
+  '.webp': [[0x52, 0x49, 0x46, 0x46]], // RIFF
+  // Documents
+  '.pdf': [[0x25, 0x50, 0x44, 0x46]], // %PDF
+  '.doc': [[0xD0, 0xCF, 0x11, 0xE0]],
+  '.docx': [[0x50, 0x4B, 0x03, 0x04]], // ZIP
+  '.ppt': [[0xD0, 0xCF, 0x11, 0xE0]],
+  '.pptx': [[0x50, 0x4B, 0x03, 0x04]], // ZIP
+  '.xls': [[0xD0, 0xCF, 0x11, 0xE0]],
+  '.xlsx': [[0x50, 0x4B, 0x03, 0x04]], // ZIP
+};
+
+// Helper to validate magic bytes
+function validateMagicBytes(buffer: Buffer, ext: string): boolean {
+  const signatures = MAGIC_BYTES[ext.toLowerCase()];
+  if (!signatures) return true; // No signature to check
+
+  for (const sig of signatures) {
+    // Check if buffer starts with this signature (allow offset for mp4/mov)
+    const isMatch = sig.every((byte, index) => {
+      // For mp4/mov, signature is at offset 4
+      const offset = (ext === '.mp4' || ext === '.mov') && sig.length === 4 && sig[0] === 0x66 ? 4 : 0;
+      return buffer[index + offset] === byte;
+    });
+    if (isMatch) return true;
+  }
+  return false;
+}
+
 // Ensure uploads directories exist
 const uploadsDir = path.join(__dirname, '../public/uploads/videos');
 const avatarsDir = path.join(__dirname, '../public/uploads/avatars');
@@ -36,9 +82,14 @@ router.post('/video', authenticateToken, requireRole(['COACH', 'ADMIN']), async 
       return res.status(400).json({ error: 'No boundary found in multipart request' });
     }
 
-    // Collect body chunks
+    // Collect body chunks with size limit
     const chunks: Buffer[] = [];
+    let totalSize = 0;
     for await (const chunk of req as any) {
+      totalSize += chunk.length;
+      if (totalSize > MAX_VIDEO_SIZE) {
+        return res.status(413).json({ error: `File too large. Maximum size is ${MAX_VIDEO_SIZE / 1024 / 1024}MB` });
+      }
       chunks.push(chunk);
     }
     const body = Buffer.concat(chunks);
@@ -76,8 +127,14 @@ router.post('/video', authenticateToken, requireRole(['COACH', 'ADMIN']), async 
         const fileContentStart = headerEndIndex + 4;
         const fileContent = part.slice(fileContentStart).replace(/\r\n--$/, '');
 
+        // SECURITY: Validate magic bytes
+        const fileBuffer = Buffer.from(fileContent, 'latin1');
+        if (!validateMagicBytes(fileBuffer, ext)) {
+          return res.status(400).json({ error: 'File content does not match expected format' });
+        }
+
         // Write file
-        fs.writeFileSync(filepath, Buffer.from(fileContent, 'latin1'));
+        fs.writeFileSync(filepath, fileBuffer);
 
         // Return URL
         const videoUrl = `/uploads/videos/${uniqueFilename}`;
@@ -110,9 +167,14 @@ router.post('/avatar', authenticateToken, async (req: AuthRequest, res) => {
       return res.status(400).json({ error: 'No boundary found in multipart request' });
     }
 
-    // Collect body chunks
+    // Collect body chunks with size limit
     const chunks: Buffer[] = [];
+    let totalSize = 0;
     for await (const chunk of req as any) {
+      totalSize += chunk.length;
+      if (totalSize > MAX_AVATAR_SIZE) {
+        return res.status(413).json({ error: `File too large. Maximum size is ${MAX_AVATAR_SIZE / 1024 / 1024}MB` });
+      }
       chunks.push(chunk);
     }
     const body = Buffer.concat(chunks);
@@ -150,6 +212,12 @@ router.post('/avatar', authenticateToken, async (req: AuthRequest, res) => {
         const fileContentStart = headerEndIndex + 4;
         const fileContent = part.slice(fileContentStart).replace(/\r\n--$/, '');
 
+        // SECURITY: Validate magic bytes
+        const fileBuffer = Buffer.from(fileContent, 'latin1');
+        if (!validateMagicBytes(fileBuffer, ext)) {
+          return res.status(400).json({ error: 'File content does not match expected image format' });
+        }
+
         // Delete old avatar if exists
         const user = await User.findById(userId);
         if (user?.avatarUrl) {
@@ -163,7 +231,7 @@ router.post('/avatar', authenticateToken, async (req: AuthRequest, res) => {
         }
 
         // Write file
-        fs.writeFileSync(filepath, Buffer.from(fileContent, 'latin1'));
+        fs.writeFileSync(filepath, fileBuffer);
 
         // Update user's avatarUrl
         const avatarUrl = `http://localhost:3001/uploads/avatars/${uniqueFilename}`;
@@ -198,9 +266,14 @@ router.post('/document', authenticateToken, requireRole(['COACH', 'ADMIN']), asy
       return res.status(400).json({ error: 'No boundary found in multipart request' });
     }
 
-    // Collect body chunks
+    // Collect body chunks with size limit
     const chunks: Buffer[] = [];
+    let totalSize = 0;
     for await (const chunk of req as any) {
+      totalSize += chunk.length;
+      if (totalSize > MAX_DOCUMENT_SIZE) {
+        return res.status(413).json({ error: `File too large. Maximum size is ${MAX_DOCUMENT_SIZE / 1024 / 1024}MB` });
+      }
       chunks.push(chunk);
     }
     const body = Buffer.concat(chunks);
@@ -237,8 +310,14 @@ router.post('/document', authenticateToken, requireRole(['COACH', 'ADMIN']), asy
         const fileContentStart = headerEndIndex + 4;
         const fileContent = part.slice(fileContentStart).replace(/\r\n--$/, '');
 
+        // SECURITY: Validate magic bytes
+        const fileBuffer = Buffer.from(fileContent, 'latin1');
+        if (!validateMagicBytes(fileBuffer, ext)) {
+          return res.status(400).json({ error: 'File content does not match expected document format' });
+        }
+
         // Write file
-        fs.writeFileSync(filepath, Buffer.from(fileContent, 'latin1'));
+        fs.writeFileSync(filepath, fileBuffer);
 
         // Return URL
         const documentUrl = `http://localhost:3001/uploads/documents/${uniqueFilename}`;

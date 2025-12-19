@@ -28,7 +28,7 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
     // Check if feedback already exists for this user/lesson? 
     // For now, let's allow multiple or update existing. 
     // Let's update if exists to prevent spamming.
-    
+
     const feedback = await Feedback.findOneAndUpdate(
       { userId, courseId, lessonId },
       { rating, comment },
@@ -45,7 +45,10 @@ router.post('/', authenticateToken, async (req: AuthRequest, res: Response) => {
 // Get global feedback stats (Admin/Coach)
 router.get('/stats', authenticateToken, async (req: AuthRequest, res: Response) => {
   try {
-    // if (req.user?.role !== 'ADMIN' && req.user?.role !== 'COACH') return res.status(403).json({ error: 'Forbidden' });
+    // SECURITY: Only admins and coaches can see all feedback stats
+    if (req.user?.role !== 'ADMIN' && req.user?.role !== 'COACH') {
+      return res.status(403).json({ error: 'Accès réservé aux administrateurs et coachs' });
+    }
 
     const stats = await Feedback.aggregate([
       {
@@ -75,9 +78,14 @@ router.get('/stats', authenticateToken, async (req: AuthRequest, res: Response) 
   }
 });
 
-// Get feedback for a course (Admin/Coach/Manager only?)
-// For now, let's allow authenticated users or restrict based on role if needed.
-router.get('/course/:courseId', authenticateToken, async (req, res) => {
+// Get feedback for a course (ADMIN/COACH only)
+// SECURITY FIX: Was exposing user emails to any authenticated user
+router.get('/course/:courseId', authenticateToken, async (req: AuthRequest, res) => {
+  // SECURITY: Only admins and coaches can see feedback details
+  if (req.user?.role !== 'ADMIN' && req.user?.role !== 'COACH') {
+    return res.status(403).json({ error: 'Accès réservé aux administrateurs et coachs' });
+  }
+
   try {
     const { courseId } = req.params;
     const feedbacks = await Feedback.find({ courseId }).populate('userId', 'name email');
@@ -86,5 +94,6 @@ router.get('/course/:courseId', authenticateToken, async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 });
+
 
 export default router;

@@ -10,8 +10,9 @@ const router = express.Router();
 // Helper for simple ID generation if uuid is not installed
 const generateId = () => Math.random().toString(36).substring(2, 15);
 
-// GET /api/courses - Get all courses
-router.get('/', async (req, res) => {
+// GET /api/courses - Get all courses (requires active subscription)
+// SECURITY FIX: Was previously unauthenticated, allowing paywall bypass
+router.get('/', authenticateToken, requireActiveSubscription, async (req: any, res) => {
   try {
     const courses = await Course.find();
     res.json(courses);
@@ -19,6 +20,7 @@ router.get('/', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch courses' });
   }
 });
+
 
 // GET /api/courses/:id - Get course by ID
 router.get('/:id', authenticateToken, requireActiveSubscription, async (req: any, res) => {

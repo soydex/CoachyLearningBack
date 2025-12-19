@@ -46,14 +46,53 @@ app.use(helmet({
     },
   },
 }));
-app.use(morgan('combined'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// SECURITY: Custom morgan format to prevent JWT token leakage in logs
+morgan.token('sanitized-auth', (req: any) =>
+  req.headers.authorization ? '[REDACTED]' : '-'
+);
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms - auth: :sanitized-auth'));
+app.use(express.json({ limit: '10mb' })); // SECURITY: Limit request body size
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// SECURITY: Rate limiting to prevent brute force and DoS attacks
+import rateLimit from 'express-rate-limit';
+
+// Strict limiter for login attempts
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // 5 attempts per window
+  message: { error: 'Trop de tentatives de connexion. Réessayez dans 15 minutes.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Limiter for registration 
+const registerLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 3, // 3 registrations per hour per IP
+  message: { error: 'Trop d\'inscriptions. Réessayez plus tard.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// General API limiter
+const apiLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 100, // 100 requests per minute
+  message: { error: 'Trop de requêtes. Veuillez ralentir.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 // Serve static files
 app.use(express.static('public'));
 
-// Routes
+// SECURITY: Apply rate limiters
+app.use('/api', apiLimiter); // General limit on all API routes
+
+// Routes with specific limiters for auth
+app.use('/api/auth/login', loginLimiter);
+app.use('/api/auth/register', registerLimiter);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/sessions', sessionRoutes);
