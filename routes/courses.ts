@@ -87,6 +87,83 @@ router.post('/:id/modules', authenticateToken, requireRole(['COACH', 'ADMIN']), 
   }
 });
 
+// PUT /api/courses/:id/modules/reorder - Reorder modules
+router.put('/:id/modules/reorder', authenticateToken, requireRole(['COACH', 'ADMIN']), async (req, res) => {
+  try {
+    const { moduleIds } = req.body;
+
+    if (!moduleIds || !Array.isArray(moduleIds)) {
+      return res.status(400).json({ error: 'moduleIds array is required' });
+    }
+
+    const course = await Course.findOne({ id: req.params.id });
+    if (!course) {
+      return res.status(404).json({ error: 'Course not found' });
+    }
+
+    // Create a map of modules for quick lookup
+    const moduleMap = new Map(course.modules.map(m => [m.id, m]));
+
+    // Verify all moduleIds exist in the course
+    for (const id of moduleIds) {
+      if (!moduleMap.has(id)) {
+        return res.status(400).json({ error: `Module ${id} not found in course` });
+      }
+    }
+
+    // Reorder modules according to the new order
+    const reorderedModules = moduleIds.map(id => moduleMap.get(id)!);
+    course.modules.splice(0, course.modules.length, ...reorderedModules);
+
+    await course.save();
+    res.json({ message: 'Modules reordered successfully', modules: course.modules });
+  } catch (error) {
+    console.error('Reorder modules error:', error);
+    res.status(500).json({ error: 'Failed to reorder modules' });
+  }
+});
+
+// PUT /api/courses/:id/modules/:moduleId/lessons/reorder - Reorder lessons within a module
+router.put('/:id/modules/:moduleId/lessons/reorder', authenticateToken, requireRole(['COACH', 'ADMIN']), async (req, res) => {
+  try {
+    const { lessonIds } = req.body;
+
+    if (!lessonIds || !Array.isArray(lessonIds)) {
+      return res.status(400).json({ error: 'lessonIds array is required' });
+    }
+
+    const course = await Course.findOne({ id: req.params.id });
+    if (!course) {
+      return res.status(404).json({ error: 'Course not found' });
+    }
+
+    const module = course.modules.find(m => m.id === req.params.moduleId);
+    if (!module) {
+      return res.status(404).json({ error: 'Module not found' });
+    }
+
+    // Create a map of lessons for quick lookup
+    const lessonMap = new Map(module.lessons.map(l => [l.id, l]));
+
+    // Verify all lessonIds exist in the module
+    for (const id of lessonIds) {
+      if (!lessonMap.has(id)) {
+        return res.status(400).json({ error: `Lesson ${id} not found in module` });
+      }
+    }
+
+    // Reorder lessons according to the new order
+    const reorderedLessons = lessonIds.map(id => lessonMap.get(id)!);
+    module.lessons.splice(0, module.lessons.length, ...reorderedLessons);
+
+    await course.save();
+    res.json({ message: 'Lessons reordered successfully', lessons: module.lessons });
+  } catch (error) {
+    console.error('Reorder lessons error:', error);
+    res.status(500).json({ error: 'Failed to reorder lessons' });
+  }
+});
+
 // POST /api/courses/:id/modules/:moduleId/lessons - Add a lesson to a module
 router.post('/:id/modules/:moduleId/lessons', authenticateToken, requireRole(['COACH', 'ADMIN']), async (req, res) => {
   try {
@@ -589,81 +666,6 @@ router.get('/:id/certificate', authenticateToken, requireActiveSubscription, asy
   }
 });
 
-// PUT /api/courses/:id/modules/reorder - Reorder modules
-router.put('/:id/modules/reorder', authenticateToken, requireRole(['COACH', 'ADMIN']), async (req, res) => {
-  try {
-    const { moduleIds } = req.body;
 
-    if (!moduleIds || !Array.isArray(moduleIds)) {
-      return res.status(400).json({ error: 'moduleIds array is required' });
-    }
-
-    const course = await Course.findOne({ id: req.params.id });
-    if (!course) {
-      return res.status(404).json({ error: 'Course not found' });
-    }
-
-    // Create a map of modules for quick lookup
-    const moduleMap = new Map(course.modules.map(m => [m.id, m]));
-
-    // Verify all moduleIds exist in the course
-    for (const id of moduleIds) {
-      if (!moduleMap.has(id)) {
-        return res.status(400).json({ error: `Module ${id} not found in course` });
-      }
-    }
-
-    // Reorder modules according to the new order
-    const reorderedModules = moduleIds.map(id => moduleMap.get(id)!);
-    course.modules.splice(0, course.modules.length, ...reorderedModules);
-
-    await course.save();
-    res.json({ message: 'Modules reordered successfully', modules: course.modules });
-  } catch (error) {
-    console.error('Reorder modules error:', error);
-    res.status(500).json({ error: 'Failed to reorder modules' });
-  }
-});
-
-// PUT /api/courses/:id/modules/:moduleId/lessons/reorder - Reorder lessons within a module
-router.put('/:id/modules/:moduleId/lessons/reorder', authenticateToken, requireRole(['COACH', 'ADMIN']), async (req, res) => {
-  try {
-    const { lessonIds } = req.body;
-
-    if (!lessonIds || !Array.isArray(lessonIds)) {
-      return res.status(400).json({ error: 'lessonIds array is required' });
-    }
-
-    const course = await Course.findOne({ id: req.params.id });
-    if (!course) {
-      return res.status(404).json({ error: 'Course not found' });
-    }
-
-    const module = course.modules.find(m => m.id === req.params.moduleId);
-    if (!module) {
-      return res.status(404).json({ error: 'Module not found' });
-    }
-
-    // Create a map of lessons for quick lookup
-    const lessonMap = new Map(module.lessons.map(l => [l.id, l]));
-
-    // Verify all lessonIds exist in the module
-    for (const id of lessonIds) {
-      if (!lessonMap.has(id)) {
-        return res.status(400).json({ error: `Lesson ${id} not found in module` });
-      }
-    }
-
-    // Reorder lessons according to the new order
-    const reorderedLessons = lessonIds.map(id => lessonMap.get(id)!);
-    module.lessons.splice(0, module.lessons.length, ...reorderedLessons);
-
-    await course.save();
-    res.json({ message: 'Lessons reordered successfully', lessons: module.lessons });
-  } catch (error) {
-    console.error('Reorder lessons error:', error);
-    res.status(500).json({ error: 'Failed to reorder lessons' });
-  }
-});
 
 export default router;
