@@ -140,6 +140,19 @@ app.use((req, res) => {
 
 async function startServer() {
   try {
+    console.log(process.env.NODE_ENV);
+    console.log('🚀 Starting server...');
+    if (!process.env.MONGODB_URI) {
+      throw new Error('Missing MONGODB_URI environment variable');
+    }
+    else if (!process.env.JWT_SECRET) {
+      throw new Error('Missing JWT_SECRET environment variable');
+    }
+    else if (!process.env.AUTH_SECRET) {
+      throw new Error('Missing AUTH_SECRET environment variable');
+    }
+    console.log('✅ All environment variables are set');
+
     await dbConnect();
     console.log('✅ Connected to MongoDB');
 

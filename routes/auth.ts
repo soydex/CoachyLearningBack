@@ -1,7 +1,10 @@
 import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 import User, { IUser } from "../models/User";
+import PasswordResetToken from "../models/PasswordResetToken";
+import { sendPasswordResetEmail, APP_URL } from "../lib/brevo";
 import { z } from "zod";
 
 const router = express.Router();
@@ -24,6 +27,16 @@ const RegisterSchema = z.object({
   password: z.string().min(8).max(128), // SECURITY: Min 8 for strength, max 128 to prevent bcrypt DoS
   // SECURITY: role removed - users cannot self-assign roles, always defaults to USER
 });
+
+const ForgotPasswordSchema = z.object({
+  email: z.string().email(),
+});
+
+const ResetPasswordSchema = z.object({
+  token: z.string().min(1),
+  newPassword: z.string().min(8).max(128),
+});
+
 
 // POST /api/auth/register
 router.post("/register", async (req, res) => {
@@ -227,4 +240,120 @@ router.post("/change-password", authenticateToken, async (req: any, res) => {
   }
 });
 
+// POST /api/auth/forgot-password
+router.post("/forgot-password", async (req, res) => {
+  try {
+    const validatedData = ForgotPasswordSchema.parse(req.body);
+
+    // SECURITY: Always return same response to prevent user enumeration
+    const genericMessage = "Si un compte existe avec cet email, vous recevrez un lien de réinitialisation.";
+
+    // Find user by email
+    const user = await User.findOne({ email: validatedData.email.toLowerCase() });
+
+    // If user doesn't exist, return success anyway (anti-enumeration)
+    if (!user) {
+      return res.json({ message: genericMessage });
+    }
+
+    // Delete any existing reset tokens for this user
+    await PasswordResetToken.deleteMany({ userId: user._id });
+
+    // Generate cryptographically secure token
+    const resetToken = crypto.randomBytes(32).toString("hex");
+
+    // Store only the hash of the token
+    const tokenHash = crypto.createHash("sha256").update(resetToken).digest("hex");
+
+    // Create token with 1 hour expiration
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    await PasswordResetToken.create({
+      userId: user._id,
+      tokenHash,
+      expiresAt,
+    });
+
+    // Generate reset link
+    const resetLink = `${APP_URL}/reset-password?token=${resetToken}`;
+
+    // Send email
+    const emailSent = await sendPasswordResetEmail(
+      user.email,
+      resetLink,
+      user.name
+    );
+
+    if (!emailSent) {
+      console.error("Failed to send password reset email to:", user.email);
+    }
+
+    res.json({ message: genericMessage });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        error: "Email invalide",
+        details: error.issues,
+      });
+    }
+    console.error("Forgot password error:", error);
+    res.status(500).json({ error: "Une erreur est survenue. Veuillez réessayer." });
+  }
+});
+
+// POST /api/auth/reset-password
+router.post("/reset-password", async (req, res) => {
+  try {
+    const validatedData = ResetPasswordSchema.parse(req.body);
+
+    // Hash the provided token to compare with stored hash
+    const tokenHash = crypto.createHash("sha256").update(validatedData.token).digest("hex");
+
+    // Find the token in database
+    const resetToken = await PasswordResetToken.findOne({
+      tokenHash,
+      expiresAt: { $gt: new Date() }, // Not expired
+    });
+
+    if (!resetToken) {
+      return res.status(400).json({
+        error: "Ce lien de réinitialisation est invalide ou a expiré.",
+      });
+    }
+
+    // Find the user
+    const user = await User.findById(resetToken.userId);
+    if (!user) {
+      // Clean up orphaned token
+      await PasswordResetToken.deleteOne({ _id: resetToken._id });
+      return res.status(400).json({
+        error: "Une erreur est survenue. Veuillez réessayer.",
+      });
+    }
+
+    // Hash the new password
+    const hashedPassword = await bcrypt.hash(validatedData.newPassword, 10);
+
+    // Update user password
+    user.password = hashedPassword;
+    await user.save();
+
+    // Delete the used token (and any other tokens for this user)
+    await PasswordResetToken.deleteMany({ userId: user._id });
+
+    console.log(`✅ Password reset successful for user: ${user.email}`);
+
+    res.json({ message: "Votre mot de passe a été réinitialisé avec succès." });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        error: "Données invalides",
+        details: error.issues,
+      });
+    }
+    console.error("Reset password error:", error);
+    res.status(500).json({ error: "Une erreur est survenue. Veuillez réessayer." });
+  }
+});
+
 export default router;
+
