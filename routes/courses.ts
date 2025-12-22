@@ -3,7 +3,7 @@ import Course from '../models/Course';
 import User from '../models/User';
 import Feedback from '../models/Feedback';
 import { authenticateToken, requireRole, requireActiveSubscription, AuthRequest } from '../middleware/auth';
-import { v4 as uuidv4 } from 'uuid'; // Assuming uuid is available or I'll use a helper
+import { generateCertificate } from '../utils/certificateGenerator';
 
 const router = express.Router();
 
@@ -651,8 +651,8 @@ router.get('/:id/certificate', authenticateToken, requireActiveSubscription, asy
       return res.status(403).json({ error: 'Course not completed' });
     }
 
-    // Generate certificate data (mock for now)
-    const certificate = {
+    // Generate certificate data
+    const certificateData = {
       id: `cert-${userId}-${courseId}`,
       studentName: user.name,
       courseTitle: course.title,
@@ -660,7 +660,12 @@ router.get('/:id/certificate', authenticateToken, requireActiveSubscription, asy
       organization: 'CoachyLearning'
     };
 
-    res.json(certificate);
+    // Set headers for PDF download
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename=certificate-${course.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`);
+
+    // Generate and stream PDF
+    generateCertificate(certificateData, res);
 
   } catch (error) {
     console.error('Certificate error:', error);
