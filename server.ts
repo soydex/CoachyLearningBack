@@ -3,6 +3,9 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import dbConnect from './lib/db';
+import http from 'http';
+import { Server } from 'socket.io';
+import jwt from 'jsonwebtoken';
 
 // Import models to ensure they are registered with Mongoose
 import './models/User';
@@ -11,6 +14,8 @@ import './models/Course';
 import './models/Notification';
 import './models/Quote';
 import './models/EnergyLog';
+import './models/Conversation';
+import './models/Message';
 
 // Import routes
 import authRoutes from './routes/auth';
@@ -25,9 +30,23 @@ import adminRoutes from './routes/admin';
 import uploadRoutes from './routes/upload';
 import quoteRoutes from './routes/quotes';
 import energyRoutes from './routes/energy';
+import messageRoutes from './routes/messages';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// Create HTTP server for Socket.io
+const httpServer = http.createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://192.168.1.37:3000'],
+    credentials: true,
+    methods: ["GET", "POST"]
+  }
+});
+
+// Make io available in routes
+app.set('io', io);
 
 // Middleware
 app.use(cors({
@@ -104,6 +123,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/quotes', quoteRoutes);
 app.use('/api/energy-logs', energyRoutes);
+app.use('/api/messages', messageRoutes);
 app.use('/api-explorer', apiExplorerRoutes);
 
 // Health check
@@ -138,6 +158,52 @@ app.use((req, res) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
+// Socket.io Authentication Middleware
+io.use((socket, next) => {
+  const token = socket.handshake.auth.token;
+  if (!token) {
+    return next(new Error('Authentication error'));
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET as string);
+    (socket as any).user = decoded;
+    next();
+  } catch (err) {
+    next(new Error('Authentication error'));
+  }
+});
+
+io.on('connection', (socket) => {
+  console.log('Socket connected:', socket.id, 'User:', (socket as any).user?.userId);
+
+  // Join user to their own room for personal notifications/messages
+  // Using user ID as room name is common for 1-to-1 or user-specific events
+  /*
+     Note: In Conversation logic, we emit to "conversationId".
+     But initially or for notifications we might want to emit to userId.
+     
+     In messages.ts I did: `io.to(conversation._id.toString()).emit('new_message', message);`
+     
+     So we MUST ensure clients join the conversation rooms they are part of.
+     A simple way is to let client emit "join_conversation" event.
+  */
+
+  socket.on('join_conversation', (conversationId) => {
+    // TODO: Verify user is participant
+    socket.join(conversationId);
+    console.log(`Socket ${socket.id} joined conversation ${conversationId}`);
+  });
+
+  socket.on('leave_conversation', (conversationId) => {
+    socket.leave(conversationId);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('Socket disconnected:', socket.id);
+  });
+});
+
 async function startServer() {
   try {
     console.log(process.env.NODE_ENV);
@@ -156,9 +222,10 @@ async function startServer() {
     await dbConnect();
     console.log('✅ Connected to MongoDB');
 
-    app.listen(PORT, () => {
+    httpServer.listen(PORT, () => {
       console.log(`🚀 Server running on http://localhost:${PORT}`);
       console.log(`📚 API Explorer available at http://localhost:${PORT}/api-explorer`);
+      console.log(`⚡ Socket.io enabled`);
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);

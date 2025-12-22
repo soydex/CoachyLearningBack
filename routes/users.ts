@@ -7,27 +7,38 @@ import { authenticateToken, AuthRequest } from '../middleware/auth';
 
 const router = express.Router();
 
-// GET /api/users - Get all users (ADMIN only)
+// GET /api/users - Get users (ADMIN: all, USER/COACH: appropriate peers for messaging)
 router.get('/', authenticateToken, async (req: AuthRequest, res) => {
   try {
-    // Only ADMIN can list all users
-    if (req.user?.role !== 'ADMIN') {
-      return res.status(403).json({ error: 'Admin access required' });
+    const { page = 1, limit = 10, role, search } = req.query;
+    const query: any = {};
+
+    // Role filtering logic
+    if (req.user?.role === 'ADMIN') {
+      // Admin can see everyone
+      if (role && typeof role === 'string') query.role = role;
+    } else if (req.user?.role === 'USER') {
+      // Students can only see Coaches (and maybe Admins?)
+      // For now, let's allow finding COACH users to chat with
+      query.role = 'COACH';
+    } else if (req.user?.role === 'COACH') {
+      // Coaches can see USERs (Students)
+      query.role = 'USER';
+    } else {
+      // Managers? 
+      if (role && typeof role === 'string') query.role = role;
     }
 
-    const { page = 1, limit = 10, role } = req.query;
-
-    const query: any = {};
-    // Validate role is a valid string before using in query
-    if (role && typeof role === 'string' && ['USER', 'MANAGER', 'COACH', 'ADMIN'].includes(role)) {
-      query.role = role;
+    // Name search
+    if (search && typeof search === 'string') {
+      query.name = { $regex: search, $options: 'i' };
     }
 
     const users = await User.find(query)
-      .select('-password -legacyWPHash') // SECURITY: Never expose password hashes
+      .select('name email avatarUrl role') // SECURITY: Minimal fields for directory
       .limit(Number(limit) * 1)
       .skip((Number(page) - 1) * Number(limit))
-      .sort({ createdAt: -1 });
+      .sort({ name: 1 });
 
     const total = await User.countDocuments(query);
 
